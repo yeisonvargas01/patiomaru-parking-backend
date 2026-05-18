@@ -1,0 +1,5 @@
+package co.edu.uco.patiomaruparking.datos.dao.sql.postgresql;
+
+public class EmpleadoDAO {
+
+}

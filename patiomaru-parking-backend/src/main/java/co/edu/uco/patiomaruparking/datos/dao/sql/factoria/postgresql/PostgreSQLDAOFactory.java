@@ -2,22 +2,12 @@ package co.edu.uco.patiomaruparking.datos.dao.sql.factoria.postgresql;
 
 import java.sql.SQLException;
 
-import co.edu.uco.patiomaruparking.datos.dao.CajaDAO;
-import co.edu.uco.patiomaruparking.datos.dao.CargoDAO;
-import co.edu.uco.patiomaruparking.datos.dao.CategoriaDAO;
-import co.edu.uco.patiomaruparking.datos.dao.CiudadDAO;
 import co.edu.uco.patiomaruparking.datos.dao.ClienteDAO;
 import co.edu.uco.patiomaruparking.datos.dao.DetallePedidoDAO;
 import co.edu.uco.patiomaruparking.datos.dao.EmpleadoDAO;
-import co.edu.uco.patiomaruparking.datos.dao.InsumoDAO;
-import co.edu.uco.patiomaruparking.datos.dao.InventarioDAO;
 import co.edu.uco.patiomaruparking.datos.dao.MesaDAO;
-import co.edu.uco.patiomaruparking.datos.dao.MetodoPagoDAO;
-import co.edu.uco.patiomaruparking.datos.dao.PagoDAO;
 import co.edu.uco.patiomaruparking.datos.dao.PedidoDAO;
 import co.edu.uco.patiomaruparking.datos.dao.PlatoDAO;
-import co.edu.uco.patiomaruparking.datos.dao.TipoDocumentoIdentificacionDAO;
-import co.edu.uco.patiomaruparking.datos.dao.UbicacionDAO;
 import co.edu.uco.patiomaruparking.datos.dao.sql.factoria.DAOFactory;
 
 public final class PostgreSQLDAOFactory extends DAOFactory {
@@ -107,53 +97,4 @@ public final class PostgreSQLDAOFactory extends DAOFactory {
 		return null;
 	}
 
-	@Override
-	public CategoriaDAO obtenerCategoriaDAO() {
-		return null;
-	}
-
-	@Override
-	public InventarioDAO obtenerInventarioDAO() {
-		return null;
-	}
-
-	@Override
-	public InsumoDAO obtenerInsumoDAO() {
-		return null;
-	}
-
-	@Override
-	public PagoDAO obtenerPagoDAO() {
-		return null;
-	}
-
-	@Override
-	public MetodoPagoDAO obtenerMetodoPagoDAO() {
-		return null;
-	}
-
-	@Override
-	public CajaDAO obtenerCajaDAO() {
-		return null;
-	}
-
-	@Override
-	public UbicacionDAO obtenerUbicacionDAO() {
-		return null;
-	}
-
-	@Override
-	public CiudadDAO obtenerCiudadDAO() {
-		return null;
-	}
-
-	@Override
-	public CargoDAO obtenerCargoDAO() {
-		return null;
-	}
-
-	@Override
-	public TipoDocumentoIdentificacionDAO obtenerTipoDocumentoIdentificacionDAO() {
-		return null;
-	}
 }

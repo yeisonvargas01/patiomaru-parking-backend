@@ -2,22 +2,13 @@ package co.edu.uco.patiomaruparking.datos.dao.sql.factoria;
 
 import java.sql.Connection;
 
-import co.edu.uco.patiomaruparking.datos.dao.CajaDAO;
-import co.edu.uco.patiomaruparking.datos.dao.CargoDAO;
-import co.edu.uco.patiomaruparking.datos.dao.CategoriaDAO;
-import co.edu.uco.patiomaruparking.datos.dao.CiudadDAO;
+
 import co.edu.uco.patiomaruparking.datos.dao.ClienteDAO;
 import co.edu.uco.patiomaruparking.datos.dao.DetallePedidoDAO;
 import co.edu.uco.patiomaruparking.datos.dao.EmpleadoDAO;
-import co.edu.uco.patiomaruparking.datos.dao.InsumoDAO;
-import co.edu.uco.patiomaruparking.datos.dao.InventarioDAO;
 import co.edu.uco.patiomaruparking.datos.dao.MesaDAO;
-import co.edu.uco.patiomaruparking.datos.dao.MetodoPagoDAO;
-import co.edu.uco.patiomaruparking.datos.dao.PagoDAO;
 import co.edu.uco.patiomaruparking.datos.dao.PedidoDAO;
 import co.edu.uco.patiomaruparking.datos.dao.PlatoDAO;
-import co.edu.uco.patiomaruparking.datos.dao.TipoDocumentoIdentificacionDAO;
-import co.edu.uco.patiomaruparking.datos.dao.UbicacionDAO;
 import co.edu.uco.patiomaruparking.datos.dao.sql.factoria.postgresql.PostgreSQLDAOFactory;
 
 public abstract class DAOFactory {
@@ -57,24 +48,4 @@ public abstract class DAOFactory {
 	public abstract DetallePedidoDAO obtenerDetallePedidoDAO();
 
 	public abstract PlatoDAO obtenerPlatoDAO();
-
-	public abstract CategoriaDAO obtenerCategoriaDAO();
-
-	public abstract InventarioDAO obtenerInventarioDAO();
-
-	public abstract InsumoDAO obtenerInsumoDAO();
-
-	public abstract PagoDAO obtenerPagoDAO();
-
-	public abstract MetodoPagoDAO obtenerMetodoPagoDAO();
-
-	public abstract CajaDAO obtenerCajaDAO();
-
-	public abstract UbicacionDAO obtenerUbicacionDAO();
-
-	public abstract CiudadDAO obtenerCiudadDAO();
-
-	public abstract CargoDAO obtenerCargoDAO();
-
-	public abstract TipoDocumentoIdentificacionDAO obtenerTipoDocumentoIdentificacionDAO();
 }
