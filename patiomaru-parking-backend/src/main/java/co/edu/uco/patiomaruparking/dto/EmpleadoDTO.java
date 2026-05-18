@@ -16,7 +16,7 @@ public class EmpleadoDTO {
 	private String numeroTelefono;
 	private String correoElectronico;
 	private String direccionResidencia;
-	private CiudadDTO ciudad;
+	private CiudadResidenciaDTO ciudadResidencia;
 	private TipoDocumentoIdentificacionDTO tipoDocumentoIdentificacion;
 	private CargoDTO cargo;
 
@@ -33,7 +33,7 @@ public class EmpleadoDTO {
 		setNumeroTelefono(builder.numeroTelefono);
 		setCorreoElectronico(builder.correoElectronico);
 		setDireccionResidencia(builder.direccionResidencia);
-		setCiudad(builder.ciudad);
+		setCiudadResidencia(builder.ciudadResidencia);
 		setTipoDocumentoIdentificacion(builder.tipoDocumentoIdentificacion);
 		setCargo(builder.cargo);
 	}
@@ -138,12 +138,14 @@ public class EmpleadoDTO {
 		this.direccionResidencia = aplicarTrim(direccionResidencia);
 	}
 
-	public CiudadDTO getCiudad() {
-		return ciudad;
+	public CiudadResidenciaDTO getCiudadResidencia() {
+		return ciudadResidencia;
 	}
 
-	private void setCiudad(final CiudadDTO ciudad) {
-		this.ciudad = ciudad == null ? CiudadDTO.builder().build() : ciudad;
+	private void setCiudadResidencia(final CiudadResidenciaDTO ciudadResidencia) {
+		this.ciudadResidencia = ciudadResidencia == null
+				? CiudadResidenciaDTO.builder().build()
+				: ciudadResidencia;
 	}
 
 	public TipoDocumentoIdentificacionDTO getTipoDocumentoIdentificacion() {
@@ -178,7 +180,7 @@ public class EmpleadoDTO {
 		private String numeroTelefono;
 		private String correoElectronico;
 		private String direccionResidencia;
-		private CiudadDTO ciudad;
+		private CiudadResidenciaDTO ciudadResidencia;
 		private TipoDocumentoIdentificacionDTO tipoDocumentoIdentificacion;
 		private CargoDTO cargo;
 
@@ -246,8 +248,10 @@ public class EmpleadoDTO {
 			return this;
 		}
 
-		public Builder ciudad(final CiudadDTO ciudad) {
-			this.ciudad = ciudad == null ? CiudadDTO.builder().build() : ciudad;
+		public Builder ciudadResidencia(final CiudadResidenciaDTO ciudadResidencia) {
+			this.ciudadResidencia = ciudadResidencia == null
+					? CiudadResidenciaDTO.builder().build()
+					: ciudadResidencia;
 			return this;
 		}
 

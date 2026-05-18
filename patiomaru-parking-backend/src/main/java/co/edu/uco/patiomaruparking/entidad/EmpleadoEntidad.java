@@ -16,7 +16,7 @@ public class EmpleadoEntidad {
 	private String numeroTelefono;
 	private String correoElectronico;
 	private String direccionResidencia;
-	private CiudadEntidad ciudad;
+	private CiudadResidenciaEntidad ciudadResidencia;
 	private TipoDocumentoIdentificacionEntidad tipoDocumentoIdentificacion;
 	private CargoEntidad cargo;
 
@@ -33,7 +33,7 @@ public class EmpleadoEntidad {
 		setNumeroTelefono(builder.numeroTelefono);
 		setCorreoElectronico(builder.correoElectronico);
 		setDireccionResidencia(builder.direccionResidencia);
-		setCiudad(builder.ciudad);
+		setCiudadResidencia(builder.ciudadResidencia);
 		setTipoDocumentoIdentificacion(builder.tipoDocumentoIdentificacion);
 		setCargo(builder.cargo);
 	}
@@ -138,12 +138,14 @@ public class EmpleadoEntidad {
 		this.direccionResidencia = aplicarTrim(direccionResidencia);
 	}
 
-	public CiudadEntidad getCiudad() {
-		return ciudad;
+	public CiudadResidenciaEntidad getCiudadResidencia() {
+		return ciudadResidencia;
 	}
 
-	private void setCiudad(final CiudadEntidad ciudad) {
-		this.ciudad = ciudad == null ? CiudadEntidad.builder().build() : ciudad;
+	private void setCiudadResidencia(final CiudadResidenciaEntidad ciudadResidencia) {
+		this.ciudadResidencia = ciudadResidencia == null
+				? CiudadResidenciaEntidad.builder().build()
+				: ciudadResidencia;
 	}
 
 	public TipoDocumentoIdentificacionEntidad getTipoDocumentoIdentificacion() {
@@ -178,7 +180,7 @@ public class EmpleadoEntidad {
 		private String numeroTelefono;
 		private String correoElectronico;
 		private String direccionResidencia;
-		private CiudadEntidad ciudad;
+		private CiudadResidenciaEntidad ciudadResidencia;
 		private TipoDocumentoIdentificacionEntidad tipoDocumentoIdentificacion;
 		private CargoEntidad cargo;
 
@@ -246,8 +248,10 @@ public class EmpleadoEntidad {
 			return this;
 		}
 
-		public Builder ciudad(final CiudadEntidad ciudad) {
-			this.ciudad = ciudad == null ? CiudadEntidad.builder().build() : ciudad;
+		public Builder ciudadResidencia(final CiudadResidenciaEntidad ciudadResidencia) {
+			this.ciudadResidencia = ciudadResidencia == null
+					? CiudadResidenciaEntidad.builder().build()
+					: ciudadResidencia;
 			return this;
 		}
 

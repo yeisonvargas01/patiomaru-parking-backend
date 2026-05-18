@@ -6,18 +6,16 @@ public class PlatoDTO {
 
 	private String codigoPlato;
 	private String nombre;
-	private String descripcion;
-	private BigDecimal precioVenta;
-	private Boolean disponible;
 	private CategoriaDTO categoria;
+	private BigDecimal precioVenta;
+	private Boolean estado;
 
 	private PlatoDTO(final Builder builder) {
 		setCodigoPlato(builder.codigoPlato);
 		setNombre(builder.nombre);
-		setDescripcion(builder.descripcion);
-		setPrecioVenta(builder.precioVenta);
-		setDisponible(builder.disponible);
 		setCategoria(builder.categoria);
+		setPrecioVenta(builder.precioVenta);
+		setEstado(builder.estado);
 	}
 
 	public static Builder builder() {
@@ -40,12 +38,12 @@ public class PlatoDTO {
 		this.nombre = aplicarTrim(nombre);
 	}
 
-	public String getDescripcion() {
-		return descripcion;
+	public CategoriaDTO getCategoria() {
+		return categoria;
 	}
 
-	private void setDescripcion(final String descripcion) {
-		this.descripcion = aplicarTrim(descripcion);
+	private void setCategoria(final CategoriaDTO categoria) {
+		this.categoria = categoria == null ? CategoriaDTO.builder().build() : categoria;
 	}
 
 	public BigDecimal getPrecioVenta() {
@@ -56,30 +54,21 @@ public class PlatoDTO {
 		this.precioVenta = precioVenta;
 	}
 
-	public Boolean getDisponible() {
-		return disponible;
+	public Boolean getEstado() {
+		return estado;
 	}
 
-	private void setDisponible(final Boolean disponible) {
-		this.disponible = disponible;
-	}
-
-	public CategoriaDTO getCategoria() {
-		return categoria;
-	}
-
-	private void setCategoria(final CategoriaDTO categoria) {
-		this.categoria = categoria == null ? CategoriaDTO.builder().build() : categoria;
+	private void setEstado(final Boolean estado) {
+		this.estado = estado;
 	}
 
 	public static class Builder {
 
 		private String codigoPlato;
 		private String nombre;
-		private String descripcion;
-		private BigDecimal precioVenta;
-		private Boolean disponible;
 		private CategoriaDTO categoria;
+		private BigDecimal precioVenta;
+		private Boolean estado;
 
 		private Builder() {
 			super();
@@ -95,8 +84,8 @@ public class PlatoDTO {
 			return this;
 		}
 
-		public Builder descripcion(final String descripcion) {
-			this.descripcion = aplicarTrim(descripcion);
+		public Builder categoria(final CategoriaDTO categoria) {
+			this.categoria = categoria == null ? CategoriaDTO.builder().build() : categoria;
 			return this;
 		}
 
@@ -105,13 +94,8 @@ public class PlatoDTO {
 			return this;
 		}
 
-		public Builder disponible(final Boolean disponible) {
-			this.disponible = disponible;
-			return this;
-		}
-
-		public Builder categoria(final CategoriaDTO categoria) {
-			this.categoria = categoria == null ? CategoriaDTO.builder().build() : categoria;
+		public Builder estado(final Boolean estado) {
+			this.estado = estado;
 			return this;
 		}
 

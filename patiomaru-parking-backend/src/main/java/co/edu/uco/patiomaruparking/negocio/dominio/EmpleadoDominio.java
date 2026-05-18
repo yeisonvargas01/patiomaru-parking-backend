@@ -16,7 +16,7 @@ public class EmpleadoDominio {
 	private String numeroTelefono;
 	private String correoElectronico;
 	private String direccionResidencia;
-	private CiudadDominio ciudad;
+	private CiudadResidenciaDominio ciudadResidencia;
 	private TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion;
 	private CargoDominio cargo;
 
@@ -33,7 +33,7 @@ public class EmpleadoDominio {
 		setNumeroTelefono(builder.numeroTelefono);
 		setCorreoElectronico(builder.correoElectronico);
 		setDireccionResidencia(builder.direccionResidencia);
-		setCiudad(builder.ciudad);
+		setCiudadResidencia(builder.ciudadResidencia);
 		setTipoDocumentoIdentificacion(builder.tipoDocumentoIdentificacion);
 		setCargo(builder.cargo);
 	}
@@ -138,12 +138,14 @@ public class EmpleadoDominio {
 		this.direccionResidencia = aplicarTrim(direccionResidencia);
 	}
 
-	public CiudadDominio getCiudad() {
-		return ciudad;
+	public CiudadResidenciaDominio getCiudadResidencia() {
+		return ciudadResidencia;
 	}
 
-	private void setCiudad(final CiudadDominio ciudad) {
-		this.ciudad = ciudad == null ? CiudadDominio.builder().build() : ciudad;
+	private void setCiudadResidencia(final CiudadResidenciaDominio ciudadResidencia) {
+		this.ciudadResidencia = ciudadResidencia == null
+				? CiudadResidenciaDominio.builder().build()
+				: ciudadResidencia;
 	}
 
 	public TipoDocumentoIdentificacionDominio getTipoDocumentoIdentificacion() {
@@ -180,16 +182,16 @@ public class EmpleadoDominio {
 		return !primerApellido.isBlank();
 	}
 
+	public boolean tieneCiudadResidencia() {
+		return ciudadResidencia != null && ciudadResidencia.tieneCodigo();
+	}
+
 	public boolean tieneTipoDocumentoIdentificacion() {
 		return tipoDocumentoIdentificacion != null && tipoDocumentoIdentificacion.tieneCodigo();
 	}
 
 	public boolean tieneCargo() {
 		return cargo != null && cargo.tieneCodigo();
-	}
-
-	public boolean tieneCiudad() {
-		return ciudad != null && ciudad.tieneCodigo();
 	}
 
 	public boolean estaActivo() {
@@ -216,7 +218,7 @@ public class EmpleadoDominio {
 		private String numeroTelefono;
 		private String correoElectronico;
 		private String direccionResidencia;
-		private CiudadDominio ciudad;
+		private CiudadResidenciaDominio ciudadResidencia;
 		private TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion;
 		private CargoDominio cargo;
 
@@ -284,8 +286,10 @@ public class EmpleadoDominio {
 			return this;
 		}
 
-		public Builder ciudad(final CiudadDominio ciudad) {
-			this.ciudad = ciudad == null ? CiudadDominio.builder().build() : ciudad;
+		public Builder ciudadResidencia(final CiudadResidenciaDominio ciudadResidencia) {
+			this.ciudadResidencia = ciudadResidencia == null
+					? CiudadResidenciaDominio.builder().build()
+					: ciudadResidencia;
 			return this;
 		}
 

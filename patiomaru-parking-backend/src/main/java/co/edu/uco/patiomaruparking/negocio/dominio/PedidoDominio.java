@@ -18,7 +18,7 @@ public class PedidoDominio {
 	private ClienteDominio cliente;
 	private EmpleadoDominio empleado;
 	private List<DetallePedidoDominio> detalles;
-	private PagoDominio pago;
+	
 
 	private PedidoDominio(final Builder builder) {
 		setCodigoPedido(builder.codigoPedido);
@@ -31,7 +31,7 @@ public class PedidoDominio {
 		setCliente(builder.cliente);
 		setEmpleado(builder.empleado);
 		setDetalles(builder.detalles);
-		setPago(builder.pago);
+		
 	}
 
 	public static Builder builder() {
@@ -118,13 +118,6 @@ public class PedidoDominio {
 		this.detalles = detalles == null ? new ArrayList<>() : detalles;
 	}
 
-	public PagoDominio getPago() {
-		return pago;
-	}
-
-	private void setPago(final PagoDominio pago) {
-		this.pago = pago == null ? PagoDominio.builder().build() : pago;
-	}
 
 	public boolean tieneCodigo() {
 		return !codigoPedido.isBlank();
@@ -154,9 +147,6 @@ public class PedidoDominio {
 		return detalles != null && !detalles.isEmpty();
 	}
 
-	public boolean tienePago() {
-		return pago != null && pago.tieneMetodoPago() && pago.tieneCaja();
-	}
 
 	public boolean estaCancelado() {
 		return "CANCELADO".equalsIgnoreCase(estado);
@@ -194,7 +184,6 @@ public class PedidoDominio {
 				.cliente(getCliente())
 				.empleado(getEmpleado())
 				.detalles(getDetalles())
-				.pago(getPago())
 				.build();
 	}
 
@@ -210,7 +199,7 @@ public class PedidoDominio {
 		private ClienteDominio cliente;
 		private EmpleadoDominio empleado;
 		private List<DetallePedidoDominio> detalles;
-		private PagoDominio pago;
+	
 
 		private Builder() {
 			super();
@@ -266,10 +255,6 @@ public class PedidoDominio {
 			return this;
 		}
 
-		public Builder pago(final PagoDominio pago) {
-			this.pago = pago == null ? PagoDominio.builder().build() : pago;
-			return this;
-		}
 
 		public PedidoDominio build() {
 			return new PedidoDominio(this);

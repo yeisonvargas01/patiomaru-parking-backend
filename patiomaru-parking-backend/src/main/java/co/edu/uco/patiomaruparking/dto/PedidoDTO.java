@@ -18,7 +18,6 @@ public class PedidoDTO {
 	private ClienteDTO cliente;
 	private EmpleadoDTO empleado;
 	private List<DetallePedidoDTO> detalles;
-	private PagoDTO pago;
 
 	private PedidoDTO(final Builder builder) {
 		setCodigoPedido(builder.codigoPedido);
@@ -31,7 +30,7 @@ public class PedidoDTO {
 		setCliente(builder.cliente);
 		setEmpleado(builder.empleado);
 		setDetalles(builder.detalles);
-		setPago(builder.pago);
+		
 	}
 
 	public static Builder builder() {
@@ -118,13 +117,6 @@ public class PedidoDTO {
 		this.detalles = detalles == null ? new ArrayList<>() : detalles;
 	}
 
-	public PagoDTO getPago() {
-		return pago;
-	}
-
-	private void setPago(final PagoDTO pago) {
-		this.pago = pago;
-	}
 
 	public static class Builder {
 
@@ -138,7 +130,7 @@ public class PedidoDTO {
 		private ClienteDTO cliente;
 		private EmpleadoDTO empleado;
 		private List<DetallePedidoDTO> detalles;
-		private PagoDTO pago;
+
 
 		private Builder() {
 			super();
@@ -194,10 +186,6 @@ public class PedidoDTO {
 			return this;
 		}
 
-		public Builder pago(final PagoDTO pago) {
-			this.pago = pago;
-			return this;
-		}
 
 		public PedidoDTO build() {
 			return new PedidoDTO(this);

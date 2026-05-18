@@ -18,7 +18,7 @@ public class PedidoEntidad {
 	private ClienteEntidad cliente;
 	private EmpleadoEntidad empleado;
 	private List<DetallePedidoEntidad> detalles;
-	private PagoEntidad pago;
+	
 
 	private PedidoEntidad(final Builder builder) {
 		setCodigoPedido(builder.codigoPedido);
@@ -31,7 +31,7 @@ public class PedidoEntidad {
 		setCliente(builder.cliente);
 		setEmpleado(builder.empleado);
 		setDetalles(builder.detalles);
-		setPago(builder.pago);
+		
 	}
 
 	public static Builder builder() {
@@ -118,13 +118,7 @@ public class PedidoEntidad {
 		this.detalles = detalles == null ? new ArrayList<>() : detalles;
 	}
 
-	public PagoEntidad getPago() {
-		return pago;
-	}
 
-	private void setPago(final PagoEntidad pago) {
-		this.pago = pago == null ? PagoEntidad.builder().build() : pago;
-	}
 
 	public static class Builder {
 
@@ -138,7 +132,7 @@ public class PedidoEntidad {
 		private ClienteEntidad cliente;
 		private EmpleadoEntidad empleado;
 		private List<DetallePedidoEntidad> detalles;
-		private PagoEntidad pago;
+	
 
 		private Builder() {
 			super();
@@ -194,10 +188,6 @@ public class PedidoEntidad {
 			return this;
 		}
 
-		public Builder pago(final PagoEntidad pago) {
-			this.pago = pago == null ? PagoEntidad.builder().build() : pago;
-			return this;
-		}
 
 		public PedidoEntidad build() {
 			return new PedidoEntidad(this);
