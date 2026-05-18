@@ -1,31 +1,29 @@
 package co.edu.uco.patiomaruparking.negocio.dominio;
 
-import java.util.UUID;
-
-import co.edu.uco.patiomaruparking.transversal.UtilObjeto;
-import co.edu.uco.patiomaruparking.transversal.UtilTexto;
-import co.edu.uco.patiomaruparking.transversal.UtilUUID;
-
 public class InventarioDominio {
 
-	private UUID id;
+	private String codigoInventario;
 	private String nombre;
-	private boolean estado;
 	private UbicacionDominio ubicacion;
+	private Boolean estado;
 
 	private InventarioDominio(final Builder builder) {
-		setId(builder.id);
+		setCodigoInventario(builder.codigoInventario);
 		setNombre(builder.nombre);
-		setEstado(builder.estado);
 		setUbicacion(builder.ubicacion);
+		setEstado(builder.estado);
 	}
 
-	public UUID getId() {
-		return id;
+	public static Builder builder() {
+		return new Builder();
 	}
 
-	private void setId(final UUID id) {
-		this.id = UtilUUID.obtenerValorDefecto(id);
+	public String getCodigoInventario() {
+		return codigoInventario;
+	}
+
+	private void setCodigoInventario(final String codigoInventario) {
+		this.codigoInventario = aplicarTrim(codigoInventario);
 	}
 
 	public String getNombre() {
@@ -33,15 +31,7 @@ public class InventarioDominio {
 	}
 
 	private void setNombre(final String nombre) {
-		this.nombre = UtilTexto.aplicarTrim(nombre);
-	}
-
-	public boolean isEstado() {
-		return estado;
-	}
-
-	private void setEstado(final boolean estado) {
-		this.estado = estado;
+		this.nombre = aplicarTrim(nombre);
 	}
 
 	public UbicacionDominio getUbicacion() {
@@ -49,38 +39,70 @@ public class InventarioDominio {
 	}
 
 	private void setUbicacion(final UbicacionDominio ubicacion) {
-		this.ubicacion = UtilObjeto.obtenerValorDefecto(ubicacion, new UbicacionDominio.Builder().build());
+		this.ubicacion = ubicacion == null ? UbicacionDominio.builder().build() : ubicacion;
+	}
+
+	public Boolean getEstado() {
+		return estado;
+	}
+
+	private void setEstado(final Boolean estado) {
+		this.estado = estado;
+	}
+
+	public boolean tieneCodigo() {
+		return !codigoInventario.isBlank();
+	}
+
+	public boolean tieneNombre() {
+		return !nombre.isBlank();
+	}
+
+	public boolean tieneUbicacion() {
+		return ubicacion != null && ubicacion.tieneCodigo();
+	}
+
+	public boolean estaActivo() {
+		return Boolean.TRUE.equals(estado);
 	}
 
 	public static class Builder {
 
-		private UUID id;
+		private String codigoInventario;
 		private String nombre;
-		private boolean estado;
 		private UbicacionDominio ubicacion;
+		private Boolean estado;
 
-		public Builder id(final UUID id) {
-			this.id = id;
+		private Builder() {
+			super();
+		}
+
+		public Builder codigoInventario(final String codigoInventario) {
+			this.codigoInventario = aplicarTrim(codigoInventario);
 			return this;
 		}
 
 		public Builder nombre(final String nombre) {
-			this.nombre = UtilTexto.aplicarTrim(nombre);
-			return this;
-		}
-
-		public Builder estado(final boolean estado) {
-			this.estado = estado;
+			this.nombre = aplicarTrim(nombre);
 			return this;
 		}
 
 		public Builder ubicacion(final UbicacionDominio ubicacion) {
-			this.ubicacion = ubicacion;
+			this.ubicacion = ubicacion == null ? UbicacionDominio.builder().build() : ubicacion;
+			return this;
+		}
+
+		public Builder estado(final Boolean estado) {
+			this.estado = estado;
 			return this;
 		}
 
 		public InventarioDominio build() {
 			return new InventarioDominio(this);
 		}
+	}
+
+	private static String aplicarTrim(final String valor) {
+		return valor == null ? "" : valor.trim();
 	}
 }

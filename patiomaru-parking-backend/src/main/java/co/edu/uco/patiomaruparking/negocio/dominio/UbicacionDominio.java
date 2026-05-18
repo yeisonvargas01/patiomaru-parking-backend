@@ -1,12 +1,12 @@
 package co.edu.uco.patiomaruparking.negocio.dominio;
 
-public class MesaDominio {
+public class UbicacionDominio {
 
-	private String codigoMesa;
+	private String codigoUbicacion;
 	private String nombre;
 
-	private MesaDominio(final Builder builder) {
-		setCodigoMesa(builder.codigoMesa);
+	private UbicacionDominio(final Builder builder) {
+		setCodigoUbicacion(builder.codigoUbicacion);
 		setNombre(builder.nombre);
 	}
 
@@ -14,12 +14,12 @@ public class MesaDominio {
 		return new Builder();
 	}
 
-	public String getCodigoMesa() {
-		return codigoMesa;
+	public String getCodigoUbicacion() {
+		return codigoUbicacion;
 	}
 
-	private void setCodigoMesa(final String codigoMesa) {
-		this.codigoMesa = aplicarTrim(codigoMesa);
+	private void setCodigoUbicacion(final String codigoUbicacion) {
+		this.codigoUbicacion = aplicarTrim(codigoUbicacion);
 	}
 
 	public String getNombre() {
@@ -31,20 +31,20 @@ public class MesaDominio {
 	}
 
 	public boolean tieneCodigo() {
-		return !codigoMesa.isBlank();
+		return !codigoUbicacion.isBlank();
 	}
 
 	public static class Builder {
 
-		private String codigoMesa;
+		private String codigoUbicacion;
 		private String nombre;
 
 		private Builder() {
 			super();
 		}
 
-		public Builder codigoMesa(final String codigoMesa) {
-			this.codigoMesa = aplicarTrim(codigoMesa);
+		public Builder codigoUbicacion(final String codigoUbicacion) {
+			this.codigoUbicacion = aplicarTrim(codigoUbicacion);
 			return this;
 		}
 
@@ -53,8 +53,8 @@ public class MesaDominio {
 			return this;
 		}
 
-		public MesaDominio build() {
-			return new MesaDominio(this);
+		public UbicacionDominio build() {
+			return new UbicacionDominio(this);
 		}
 	}
 

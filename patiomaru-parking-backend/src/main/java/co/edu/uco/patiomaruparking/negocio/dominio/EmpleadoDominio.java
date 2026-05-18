@@ -1,39 +1,31 @@
 package co.edu.uco.patiomaruparking.negocio.dominio;
 
 import java.time.LocalDate;
-import java.util.UUID;
-
-import co.edu.uco.patiomaruparking.transversal.UtilObjeto;
-import co.edu.uco.patiomaruparking.transversal.UtilTexto;
-import co.edu.uco.patiomaruparking.transversal.UtilUUID;
 
 public class EmpleadoDominio {
 
-	private static final LocalDate FECHA_DEFECTO = LocalDate.of(1900, 1, 1);
-
-	private UUID id;
-	private TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion;
+	private String codigoEmpleado;
 	private String numeroIdentificacion;
 	private String primerNombre;
-	private String segundoNombre;
 	private String primerApellido;
+	private String segundoNombre;
 	private String segundoApellido;
 	private LocalDate fechaNacimiento;
-	private int edad;
-	private boolean estado;
+	private Integer edad;
+	private Boolean estado;
 	private String numeroTelefono;
 	private String correoElectronico;
 	private String direccionResidencia;
-	private CargoDominio cargo;
 	private CiudadDominio ciudad;
+	private TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion;
+	private CargoDominio cargo;
 
 	private EmpleadoDominio(final Builder builder) {
-		setId(builder.id);
-		setTipoDocumentoIdentificacion(builder.tipoDocumentoIdentificacion);
+		setCodigoEmpleado(builder.codigoEmpleado);
 		setNumeroIdentificacion(builder.numeroIdentificacion);
 		setPrimerNombre(builder.primerNombre);
-		setSegundoNombre(builder.segundoNombre);
 		setPrimerApellido(builder.primerApellido);
+		setSegundoNombre(builder.segundoNombre);
 		setSegundoApellido(builder.segundoApellido);
 		setFechaNacimiento(builder.fechaNacimiento);
 		setEdad(builder.edad);
@@ -41,26 +33,21 @@ public class EmpleadoDominio {
 		setNumeroTelefono(builder.numeroTelefono);
 		setCorreoElectronico(builder.correoElectronico);
 		setDireccionResidencia(builder.direccionResidencia);
-		setCargo(builder.cargo);
 		setCiudad(builder.ciudad);
+		setTipoDocumentoIdentificacion(builder.tipoDocumentoIdentificacion);
+		setCargo(builder.cargo);
 	}
 
-	public UUID getId() {
-		return id;
+	public static Builder builder() {
+		return new Builder();
 	}
 
-	private void setId(final UUID id) {
-		this.id = UtilUUID.obtenerValorDefecto(id);
+	public String getCodigoEmpleado() {
+		return codigoEmpleado;
 	}
 
-	public TipoDocumentoIdentificacionDominio getTipoDocumentoIdentificacion() {
-		return tipoDocumentoIdentificacion;
-	}
-
-	private void setTipoDocumentoIdentificacion(
-			final TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion) {
-		this.tipoDocumentoIdentificacion = UtilObjeto.obtenerValorDefecto(
-				tipoDocumentoIdentificacion, new TipoDocumentoIdentificacionDominio.Builder().build());
+	private void setCodigoEmpleado(final String codigoEmpleado) {
+		this.codigoEmpleado = aplicarTrim(codigoEmpleado);
 	}
 
 	public String getNumeroIdentificacion() {
@@ -68,7 +55,7 @@ public class EmpleadoDominio {
 	}
 
 	private void setNumeroIdentificacion(final String numeroIdentificacion) {
-		this.numeroIdentificacion = UtilTexto.aplicarTrim(numeroIdentificacion);
+		this.numeroIdentificacion = aplicarTrim(numeroIdentificacion);
 	}
 
 	public String getPrimerNombre() {
@@ -76,15 +63,7 @@ public class EmpleadoDominio {
 	}
 
 	private void setPrimerNombre(final String primerNombre) {
-		this.primerNombre = UtilTexto.aplicarTrim(primerNombre);
-	}
-
-	public String getSegundoNombre() {
-		return segundoNombre;
-	}
-
-	private void setSegundoNombre(final String segundoNombre) {
-		this.segundoNombre = UtilTexto.aplicarTrim(segundoNombre);
+		this.primerNombre = aplicarTrim(primerNombre);
 	}
 
 	public String getPrimerApellido() {
@@ -92,7 +71,15 @@ public class EmpleadoDominio {
 	}
 
 	private void setPrimerApellido(final String primerApellido) {
-		this.primerApellido = UtilTexto.aplicarTrim(primerApellido);
+		this.primerApellido = aplicarTrim(primerApellido);
+	}
+
+	public String getSegundoNombre() {
+		return segundoNombre;
+	}
+
+	private void setSegundoNombre(final String segundoNombre) {
+		this.segundoNombre = aplicarTrim(segundoNombre);
 	}
 
 	public String getSegundoApellido() {
@@ -100,7 +87,7 @@ public class EmpleadoDominio {
 	}
 
 	private void setSegundoApellido(final String segundoApellido) {
-		this.segundoApellido = UtilTexto.aplicarTrim(segundoApellido);
+		this.segundoApellido = aplicarTrim(segundoApellido);
 	}
 
 	public LocalDate getFechaNacimiento() {
@@ -108,22 +95,22 @@ public class EmpleadoDominio {
 	}
 
 	private void setFechaNacimiento(final LocalDate fechaNacimiento) {
-		this.fechaNacimiento = UtilObjeto.obtenerValorDefecto(fechaNacimiento, FECHA_DEFECTO);
+		this.fechaNacimiento = fechaNacimiento;
 	}
 
-	public int getEdad() {
+	public Integer getEdad() {
 		return edad;
 	}
 
-	private void setEdad(final int edad) {
+	private void setEdad(final Integer edad) {
 		this.edad = edad;
 	}
 
-	public boolean isEstado() {
+	public Boolean getEstado() {
 		return estado;
 	}
 
-	private void setEstado(final boolean estado) {
+	private void setEstado(final Boolean estado) {
 		this.estado = estado;
 	}
 
@@ -132,7 +119,7 @@ public class EmpleadoDominio {
 	}
 
 	private void setNumeroTelefono(final String numeroTelefono) {
-		this.numeroTelefono = UtilTexto.aplicarTrim(numeroTelefono);
+		this.numeroTelefono = aplicarTrim(numeroTelefono);
 	}
 
 	public String getCorreoElectronico() {
@@ -140,7 +127,7 @@ public class EmpleadoDominio {
 	}
 
 	private void setCorreoElectronico(final String correoElectronico) {
-		this.correoElectronico = UtilTexto.aplicarTrim(correoElectronico);
+		this.correoElectronico = aplicarTrim(correoElectronico);
 	}
 
 	public String getDireccionResidencia() {
@@ -148,15 +135,7 @@ public class EmpleadoDominio {
 	}
 
 	private void setDireccionResidencia(final String direccionResidencia) {
-		this.direccionResidencia = UtilTexto.aplicarTrim(direccionResidencia);
-	}
-
-	public CargoDominio getCargo() {
-		return cargo;
-	}
-
-	private void setCargo(final CargoDominio cargo) {
-		this.cargo = UtilObjeto.obtenerValorDefecto(cargo, new CargoDominio.Builder().build());
+		this.direccionResidencia = aplicarTrim(direccionResidencia);
 	}
 
 	public CiudadDominio getCiudad() {
@@ -164,60 +143,114 @@ public class EmpleadoDominio {
 	}
 
 	private void setCiudad(final CiudadDominio ciudad) {
-		this.ciudad = UtilObjeto.obtenerValorDefecto(ciudad, new CiudadDominio.Builder().build());
+		this.ciudad = ciudad == null ? CiudadDominio.builder().build() : ciudad;
+	}
+
+	public TipoDocumentoIdentificacionDominio getTipoDocumentoIdentificacion() {
+		return tipoDocumentoIdentificacion;
+	}
+
+	private void setTipoDocumentoIdentificacion(final TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion) {
+		this.tipoDocumentoIdentificacion = tipoDocumentoIdentificacion == null
+				? TipoDocumentoIdentificacionDominio.builder().build()
+				: tipoDocumentoIdentificacion;
+	}
+
+	public CargoDominio getCargo() {
+		return cargo;
+	}
+
+	private void setCargo(final CargoDominio cargo) {
+		this.cargo = cargo == null ? CargoDominio.builder().build() : cargo;
+	}
+
+	public boolean tieneCodigo() {
+		return !codigoEmpleado.isBlank();
+	}
+
+	public boolean tieneNumeroIdentificacion() {
+		return !numeroIdentificacion.isBlank();
+	}
+
+	public boolean tienePrimerNombre() {
+		return !primerNombre.isBlank();
+	}
+
+	public boolean tienePrimerApellido() {
+		return !primerApellido.isBlank();
+	}
+
+	public boolean tieneTipoDocumentoIdentificacion() {
+		return tipoDocumentoIdentificacion != null && tipoDocumentoIdentificacion.tieneCodigo();
+	}
+
+	public boolean tieneCargo() {
+		return cargo != null && cargo.tieneCodigo();
+	}
+
+	public boolean tieneCiudad() {
+		return ciudad != null && ciudad.tieneCodigo();
+	}
+
+	public boolean estaActivo() {
+		return Boolean.TRUE.equals(estado);
+	}
+
+	public String obtenerNombreCompleto() {
+		return (primerNombre + " " + segundoNombre + " " + primerApellido + " " + segundoApellido)
+				.replaceAll("\\s+", " ")
+				.trim();
 	}
 
 	public static class Builder {
 
-		private UUID id;
-		private TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion;
+		private String codigoEmpleado;
 		private String numeroIdentificacion;
 		private String primerNombre;
-		private String segundoNombre;
 		private String primerApellido;
+		private String segundoNombre;
 		private String segundoApellido;
 		private LocalDate fechaNacimiento;
-		private int edad;
-		private boolean estado;
+		private Integer edad;
+		private Boolean estado;
 		private String numeroTelefono;
 		private String correoElectronico;
 		private String direccionResidencia;
-		private CargoDominio cargo;
 		private CiudadDominio ciudad;
+		private TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion;
+		private CargoDominio cargo;
 
-		public Builder id(final UUID id) {
-			this.id = id;
-			return this;
+		private Builder() {
+			super();
 		}
 
-		public Builder tipoDocumentoIdentificacion(
-				final TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion) {
-			this.tipoDocumentoIdentificacion = tipoDocumentoIdentificacion;
+		public Builder codigoEmpleado(final String codigoEmpleado) {
+			this.codigoEmpleado = aplicarTrim(codigoEmpleado);
 			return this;
 		}
 
 		public Builder numeroIdentificacion(final String numeroIdentificacion) {
-			this.numeroIdentificacion = UtilTexto.aplicarTrim(numeroIdentificacion);
+			this.numeroIdentificacion = aplicarTrim(numeroIdentificacion);
 			return this;
 		}
 
 		public Builder primerNombre(final String primerNombre) {
-			this.primerNombre = UtilTexto.aplicarTrim(primerNombre);
-			return this;
-		}
-
-		public Builder segundoNombre(final String segundoNombre) {
-			this.segundoNombre = UtilTexto.aplicarTrim(segundoNombre);
+			this.primerNombre = aplicarTrim(primerNombre);
 			return this;
 		}
 
 		public Builder primerApellido(final String primerApellido) {
-			this.primerApellido = UtilTexto.aplicarTrim(primerApellido);
+			this.primerApellido = aplicarTrim(primerApellido);
+			return this;
+		}
+
+		public Builder segundoNombre(final String segundoNombre) {
+			this.segundoNombre = aplicarTrim(segundoNombre);
 			return this;
 		}
 
 		public Builder segundoApellido(final String segundoApellido) {
-			this.segundoApellido = UtilTexto.aplicarTrim(segundoApellido);
+			this.segundoApellido = aplicarTrim(segundoApellido);
 			return this;
 		}
 
@@ -226,43 +259,54 @@ public class EmpleadoDominio {
 			return this;
 		}
 
-		public Builder edad(final int edad) {
+		public Builder edad(final Integer edad) {
 			this.edad = edad;
 			return this;
 		}
 
-		public Builder estado(final boolean estado) {
+		public Builder estado(final Boolean estado) {
 			this.estado = estado;
 			return this;
 		}
 
 		public Builder numeroTelefono(final String numeroTelefono) {
-			this.numeroTelefono = UtilTexto.aplicarTrim(numeroTelefono);
+			this.numeroTelefono = aplicarTrim(numeroTelefono);
 			return this;
 		}
 
 		public Builder correoElectronico(final String correoElectronico) {
-			this.correoElectronico = UtilTexto.aplicarTrim(correoElectronico);
+			this.correoElectronico = aplicarTrim(correoElectronico);
 			return this;
 		}
 
 		public Builder direccionResidencia(final String direccionResidencia) {
-			this.direccionResidencia = UtilTexto.aplicarTrim(direccionResidencia);
-			return this;
-		}
-
-		public Builder cargo(final CargoDominio cargo) {
-			this.cargo = cargo;
+			this.direccionResidencia = aplicarTrim(direccionResidencia);
 			return this;
 		}
 
 		public Builder ciudad(final CiudadDominio ciudad) {
-			this.ciudad = ciudad;
+			this.ciudad = ciudad == null ? CiudadDominio.builder().build() : ciudad;
+			return this;
+		}
+
+		public Builder tipoDocumentoIdentificacion(final TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion) {
+			this.tipoDocumentoIdentificacion = tipoDocumentoIdentificacion == null
+					? TipoDocumentoIdentificacionDominio.builder().build()
+					: tipoDocumentoIdentificacion;
+			return this;
+		}
+
+		public Builder cargo(final CargoDominio cargo) {
+			this.cargo = cargo == null ? CargoDominio.builder().build() : cargo;
 			return this;
 		}
 
 		public EmpleadoDominio build() {
 			return new EmpleadoDominio(this);
 		}
+	}
+
+	private static String aplicarTrim(final String valor) {
+		return valor == null ? "" : valor.trim();
 	}
 }

@@ -1,33 +1,31 @@
 package co.edu.uco.patiomaruparking.negocio.dominio;
 
-import java.util.UUID;
-
-import co.edu.uco.patiomaruparking.transversal.UtilObjeto;
-import co.edu.uco.patiomaruparking.transversal.UtilTexto;
-import co.edu.uco.patiomaruparking.transversal.UtilUUID;
-
 public class InsumoDominio {
 
-	private UUID id;
+	private String codigoInsumo;
 	private String nombre;
 	private String unidadMedida;
-	private int cantidadDisponible;
+	private Integer cantidadDisponible;
 	private InventarioDominio inventario;
 
 	private InsumoDominio(final Builder builder) {
-		setId(builder.id);
+		setCodigoInsumo(builder.codigoInsumo);
 		setNombre(builder.nombre);
 		setUnidadMedida(builder.unidadMedida);
 		setCantidadDisponible(builder.cantidadDisponible);
 		setInventario(builder.inventario);
 	}
 
-	public UUID getId() {
-		return id;
+	public static Builder builder() {
+		return new Builder();
 	}
 
-	private void setId(final UUID id) {
-		this.id = UtilUUID.obtenerValorDefecto(id);
+	public String getCodigoInsumo() {
+		return codigoInsumo;
+	}
+
+	private void setCodigoInsumo(final String codigoInsumo) {
+		this.codigoInsumo = aplicarTrim(codigoInsumo);
 	}
 
 	public String getNombre() {
@@ -35,7 +33,7 @@ public class InsumoDominio {
 	}
 
 	private void setNombre(final String nombre) {
-		this.nombre = UtilTexto.aplicarTrim(nombre);
+		this.nombre = aplicarTrim(nombre);
 	}
 
 	public String getUnidadMedida() {
@@ -43,15 +41,15 @@ public class InsumoDominio {
 	}
 
 	private void setUnidadMedida(final String unidadMedida) {
-		this.unidadMedida = UtilTexto.aplicarTrim(unidadMedida);
+		this.unidadMedida = aplicarTrim(unidadMedida);
 	}
 
-	public int getCantidadDisponible() {
+	public Integer getCantidadDisponible() {
 		return cantidadDisponible;
 	}
 
-	private void setCantidadDisponible(final int cantidadDisponible) {
-		this.cantidadDisponible = Math.max(0, cantidadDisponible);
+	private void setCantidadDisponible(final Integer cantidadDisponible) {
+		this.cantidadDisponible = cantidadDisponible;
 	}
 
 	public InventarioDominio getInventario() {
@@ -59,44 +57,93 @@ public class InsumoDominio {
 	}
 
 	private void setInventario(final InventarioDominio inventario) {
-		this.inventario = UtilObjeto.obtenerValorDefecto(inventario, new InventarioDominio.Builder().build());
+		this.inventario = inventario == null ? InventarioDominio.builder().build() : inventario;
+	}
+
+	public boolean tieneCodigo() {
+		return !codigoInsumo.isBlank();
+	}
+
+	public boolean tieneNombre() {
+		return !nombre.isBlank();
+	}
+
+	public boolean tieneUnidadMedida() {
+		return !unidadMedida.isBlank();
+	}
+
+	public boolean tieneInventario() {
+		return inventario != null && inventario.tieneCodigo();
+	}
+
+	public boolean tieneCantidadDisponibleValida() {
+		return cantidadDisponible != null && cantidadDisponible >= 0;
+	}
+
+	public boolean hayCantidadSuficiente(final Integer cantidadRequerida) {
+		return cantidadRequerida != null
+				&& cantidadRequerida > 0
+				&& cantidadDisponible != null
+				&& cantidadDisponible >= cantidadRequerida;
+	}
+
+	public InsumoDominio descontarCantidad(final Integer cantidadADescontar) {
+		if (!hayCantidadSuficiente(cantidadADescontar)) {
+			return this;
+		}
+
+		return InsumoDominio.builder()
+				.codigoInsumo(getCodigoInsumo())
+				.nombre(getNombre())
+				.unidadMedida(getUnidadMedida())
+				.cantidadDisponible(getCantidadDisponible() - cantidadADescontar)
+				.inventario(getInventario())
+				.build();
 	}
 
 	public static class Builder {
 
-		private UUID id;
+		private String codigoInsumo;
 		private String nombre;
 		private String unidadMedida;
-		private int cantidadDisponible;
+		private Integer cantidadDisponible;
 		private InventarioDominio inventario;
 
-		public Builder id(final UUID id) {
-			this.id = id;
+		private Builder() {
+			super();
+		}
+
+		public Builder codigoInsumo(final String codigoInsumo) {
+			this.codigoInsumo = aplicarTrim(codigoInsumo);
 			return this;
 		}
 
 		public Builder nombre(final String nombre) {
-			this.nombre = UtilTexto.aplicarTrim(nombre);
+			this.nombre = aplicarTrim(nombre);
 			return this;
 		}
 
 		public Builder unidadMedida(final String unidadMedida) {
-			this.unidadMedida = UtilTexto.aplicarTrim(unidadMedida);
+			this.unidadMedida = aplicarTrim(unidadMedida);
 			return this;
 		}
 
-		public Builder cantidadDisponible(final int cantidadDisponible) {
-			this.cantidadDisponible = Math.max(0, cantidadDisponible);
+		public Builder cantidadDisponible(final Integer cantidadDisponible) {
+			this.cantidadDisponible = cantidadDisponible;
 			return this;
 		}
 
 		public Builder inventario(final InventarioDominio inventario) {
-			this.inventario = inventario;
+			this.inventario = inventario == null ? InventarioDominio.builder().build() : inventario;
 			return this;
 		}
 
 		public InsumoDominio build() {
 			return new InsumoDominio(this);
 		}
+	}
+
+	private static String aplicarTrim(final String valor) {
+		return valor == null ? "" : valor.trim();
 	}
 }

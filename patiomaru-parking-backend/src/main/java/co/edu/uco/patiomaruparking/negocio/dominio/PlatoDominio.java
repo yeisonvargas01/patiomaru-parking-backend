@@ -1,36 +1,33 @@
 package co.edu.uco.patiomaruparking.negocio.dominio;
 
 import java.math.BigDecimal;
-import java.util.UUID;
-
-import co.edu.uco.patiomaruparking.transversal.UtilObjeto;
-import co.edu.uco.patiomaruparking.transversal.UtilTexto;
-import co.edu.uco.patiomaruparking.transversal.UtilUUID;
 
 public class PlatoDominio {
 
-	private static final BigDecimal PRECIO_VENTA_DEFECTO = BigDecimal.ZERO;
-
-	private UUID id;
+	private String codigoPlato;
 	private String nombre;
 	private BigDecimal precioVenta;
-	private boolean estado;
+	private Boolean estado;
 	private CategoriaDominio categoria;
 
 	private PlatoDominio(final Builder builder) {
-		setId(builder.id);
+		setCodigoPlato(builder.codigoPlato);
 		setNombre(builder.nombre);
 		setPrecioVenta(builder.precioVenta);
 		setEstado(builder.estado);
 		setCategoria(builder.categoria);
 	}
 
-	public UUID getId() {
-		return id;
+	public static Builder builder() {
+		return new Builder();
 	}
 
-	private void setId(final UUID id) {
-		this.id = UtilUUID.obtenerValorDefecto(id);
+	public String getCodigoPlato() {
+		return codigoPlato;
+	}
+
+	private void setCodigoPlato(final String codigoPlato) {
+		this.codigoPlato = aplicarTrim(codigoPlato);
 	}
 
 	public String getNombre() {
@@ -38,7 +35,7 @@ public class PlatoDominio {
 	}
 
 	private void setNombre(final String nombre) {
-		this.nombre = UtilTexto.aplicarTrim(nombre);
+		this.nombre = aplicarTrim(nombre);
 	}
 
 	public BigDecimal getPrecioVenta() {
@@ -46,15 +43,14 @@ public class PlatoDominio {
 	}
 
 	private void setPrecioVenta(final BigDecimal precioVenta) {
-		BigDecimal precioVentaSeguro = UtilObjeto.obtenerValorDefecto(precioVenta, PRECIO_VENTA_DEFECTO);
-		this.precioVenta = precioVentaSeguro.compareTo(BigDecimal.ZERO) < 0 ? PRECIO_VENTA_DEFECTO : precioVentaSeguro;
+		this.precioVenta = precioVenta;
 	}
 
-	public boolean isEstado() {
+	public Boolean getEstado() {
 		return estado;
 	}
 
-	private void setEstado(final boolean estado) {
+	private void setEstado(final Boolean estado) {
 		this.estado = estado;
 	}
 
@@ -63,45 +59,64 @@ public class PlatoDominio {
 	}
 
 	private void setCategoria(final CategoriaDominio categoria) {
-		this.categoria = UtilObjeto.obtenerValorDefecto(categoria, new CategoriaDominio.Builder().build());
+		this.categoria = categoria == null ? CategoriaDominio.builder().build() : categoria;
+	}
+
+	public boolean tieneCodigo() {
+		return !codigoPlato.isBlank();
+	}
+
+	public boolean estaDisponible() {
+		return Boolean.TRUE.equals(estado);
+	}
+
+	public boolean tienePrecioVentaValido() {
+		return precioVenta != null && precioVenta.compareTo(BigDecimal.ZERO) > 0;
 	}
 
 	public static class Builder {
 
-		private UUID id;
+		private String codigoPlato;
 		private String nombre;
 		private BigDecimal precioVenta;
-		private boolean estado;
+		private Boolean estado;
 		private CategoriaDominio categoria;
 
-		public Builder id(final UUID id) {
-			this.id = id;
+		private Builder() {
+			super();
+		}
+
+		public Builder codigoPlato(final String codigoPlato) {
+			this.codigoPlato = aplicarTrim(codigoPlato);
 			return this;
 		}
 
 		public Builder nombre(final String nombre) {
-			this.nombre = UtilTexto.aplicarTrim(nombre);
+			this.nombre = aplicarTrim(nombre);
 			return this;
 		}
 
 		public Builder precioVenta(final BigDecimal precioVenta) {
-			BigDecimal precioVentaSeguro = UtilObjeto.obtenerValorDefecto(precioVenta, PRECIO_VENTA_DEFECTO);
-			this.precioVenta = precioVentaSeguro.compareTo(BigDecimal.ZERO) < 0 ? PRECIO_VENTA_DEFECTO : precioVentaSeguro;
+			this.precioVenta = precioVenta;
 			return this;
 		}
 
-		public Builder estado(final boolean estado) {
+		public Builder estado(final Boolean estado) {
 			this.estado = estado;
 			return this;
 		}
 
 		public Builder categoria(final CategoriaDominio categoria) {
-			this.categoria = categoria;
+			this.categoria = categoria == null ? CategoriaDominio.builder().build() : categoria;
 			return this;
 		}
 
 		public PlatoDominio build() {
 			return new PlatoDominio(this);
 		}
+	}
+
+	private static String aplicarTrim(final String valor) {
+		return valor == null ? "" : valor.trim();
 	}
 }

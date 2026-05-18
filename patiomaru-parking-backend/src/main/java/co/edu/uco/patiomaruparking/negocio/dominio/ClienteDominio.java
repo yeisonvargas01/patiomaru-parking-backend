@@ -1,32 +1,31 @@
 package co.edu.uco.patiomaruparking.negocio.dominio;
 
-import java.util.UUID;
-
-import co.edu.uco.patiomaruparking.transversal.UtilTexto;
-import co.edu.uco.patiomaruparking.transversal.UtilUUID;
-
 public class ClienteDominio {
 
-	private UUID id;
+	private String codigoCliente;
 	private String nombre;
 	private String telefono;
 	private String correoElectronico;
-	private boolean estado;
+	private Boolean estado;
 
 	private ClienteDominio(final Builder builder) {
-		setId(builder.id);
+		setCodigoCliente(builder.codigoCliente);
 		setNombre(builder.nombre);
 		setTelefono(builder.telefono);
 		setCorreoElectronico(builder.correoElectronico);
 		setEstado(builder.estado);
 	}
 
-	public UUID getId() {
-		return id;
+	public static Builder builder() {
+		return new Builder();
 	}
 
-	private void setId(final UUID id) {
-		this.id = UtilUUID.obtenerValorDefecto(id);
+	public String getCodigoCliente() {
+		return codigoCliente;
+	}
+
+	private void setCodigoCliente(final String codigoCliente) {
+		this.codigoCliente = aplicarTrim(codigoCliente);
 	}
 
 	public String getNombre() {
@@ -34,7 +33,7 @@ public class ClienteDominio {
 	}
 
 	private void setNombre(final String nombre) {
-		this.nombre = UtilTexto.aplicarTrim(nombre);
+		this.nombre = aplicarTrim(nombre);
 	}
 
 	public String getTelefono() {
@@ -42,7 +41,7 @@ public class ClienteDominio {
 	}
 
 	private void setTelefono(final String telefono) {
-		this.telefono = UtilTexto.aplicarTrim(telefono);
+		this.telefono = aplicarTrim(telefono);
 	}
 
 	public String getCorreoElectronico() {
@@ -50,46 +49,54 @@ public class ClienteDominio {
 	}
 
 	private void setCorreoElectronico(final String correoElectronico) {
-		this.correoElectronico = UtilTexto.aplicarTrim(correoElectronico);
+		this.correoElectronico = aplicarTrim(correoElectronico);
 	}
 
-	public boolean isEstado() {
+	public Boolean getEstado() {
 		return estado;
 	}
 
-	private void setEstado(final boolean estado) {
+	private void setEstado(final Boolean estado) {
 		this.estado = estado;
+	}
+
+	public boolean estaActivo() {
+		return Boolean.TRUE.equals(estado);
 	}
 
 	public static class Builder {
 
-		private UUID id;
+		private String codigoCliente;
 		private String nombre;
 		private String telefono;
 		private String correoElectronico;
-		private boolean estado;
+		private Boolean estado;
 
-		public Builder id(final UUID id) {
-			this.id = id;
+		private Builder() {
+			super();
+		}
+
+		public Builder codigoCliente(final String codigoCliente) {
+			this.codigoCliente = aplicarTrim(codigoCliente);
 			return this;
 		}
 
 		public Builder nombre(final String nombre) {
-			this.nombre = UtilTexto.aplicarTrim(nombre);
+			this.nombre = aplicarTrim(nombre);
 			return this;
 		}
 
 		public Builder telefono(final String telefono) {
-			this.telefono = UtilTexto.aplicarTrim(telefono);
+			this.telefono = aplicarTrim(telefono);
 			return this;
 		}
 
 		public Builder correoElectronico(final String correoElectronico) {
-			this.correoElectronico = UtilTexto.aplicarTrim(correoElectronico);
+			this.correoElectronico = aplicarTrim(correoElectronico);
 			return this;
 		}
 
-		public Builder estado(final boolean estado) {
+		public Builder estado(final Boolean estado) {
 			this.estado = estado;
 			return this;
 		}
@@ -97,5 +104,9 @@ public class ClienteDominio {
 		public ClienteDominio build() {
 			return new ClienteDominio(this);
 		}
+	}
+
+	private static String aplicarTrim(final String valor) {
+		return valor == null ? "" : valor.trim();
 	}
 }

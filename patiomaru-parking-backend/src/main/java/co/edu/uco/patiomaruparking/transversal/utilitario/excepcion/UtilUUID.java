@@ -1,4 +1,4 @@
-package co.edu.uco.patiomaruparking.transversal;
+package co.edu.uco.patiomaruparking.transversal.utilitario.excepcion;
 
 import java.util.UUID;
 

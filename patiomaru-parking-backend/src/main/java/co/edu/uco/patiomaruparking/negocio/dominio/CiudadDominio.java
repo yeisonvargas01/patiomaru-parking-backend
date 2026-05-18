@@ -1,12 +1,12 @@
 package co.edu.uco.patiomaruparking.negocio.dominio;
 
-public class MetodoPagoDominio {
+public class CiudadDominio {
 
-	private String codigoMetodoPago;
+	private String codigoCiudad;
 	private String nombre;
 
-	private MetodoPagoDominio(final Builder builder) {
-		setCodigoMetodoPago(builder.codigoMetodoPago);
+	private CiudadDominio(final Builder builder) {
+		setCodigoCiudad(builder.codigoCiudad);
 		setNombre(builder.nombre);
 	}
 
@@ -14,12 +14,12 @@ public class MetodoPagoDominio {
 		return new Builder();
 	}
 
-	public String getCodigoMetodoPago() {
-		return codigoMetodoPago;
+	public String getCodigoCiudad() {
+		return codigoCiudad;
 	}
 
-	private void setCodigoMetodoPago(final String codigoMetodoPago) {
-		this.codigoMetodoPago = aplicarTrim(codigoMetodoPago);
+	private void setCodigoCiudad(final String codigoCiudad) {
+		this.codigoCiudad = aplicarTrim(codigoCiudad);
 	}
 
 	public String getNombre() {
@@ -31,7 +31,7 @@ public class MetodoPagoDominio {
 	}
 
 	public boolean tieneCodigo() {
-		return !codigoMetodoPago.isBlank();
+		return !codigoCiudad.isBlank();
 	}
 
 	public boolean tieneNombre() {
@@ -40,15 +40,15 @@ public class MetodoPagoDominio {
 
 	public static class Builder {
 
-		private String codigoMetodoPago;
+		private String codigoCiudad;
 		private String nombre;
 
 		private Builder() {
 			super();
 		}
 
-		public Builder codigoMetodoPago(final String codigoMetodoPago) {
-			this.codigoMetodoPago = aplicarTrim(codigoMetodoPago);
+		public Builder codigoCiudad(final String codigoCiudad) {
+			this.codigoCiudad = aplicarTrim(codigoCiudad);
 			return this;
 		}
 
@@ -57,8 +57,8 @@ public class MetodoPagoDominio {
 			return this;
 		}
 
-		public MetodoPagoDominio build() {
-			return new MetodoPagoDominio(this);
+		public CiudadDominio build() {
+			return new CiudadDominio(this);
 		}
 	}
 
