@@ -1,5 +1,5 @@
 package co.edu.uco.patiomaruparking.datos.dao.sql.postgresql;
 
-public class DetallePedidoDAO {
+public class PlatoPostgreSQLDAO {
 
 }
