@@ -10,6 +10,10 @@ public final class UtilObjeto {
 		return objeto == null;
 	}
 
+	public static <O> boolean noEsNulo(final O objeto) {
+		return !esNulo(objeto);
+	}
+
 	public static <O> O obtenerValorDefecto(final O objeto, final O valorDefecto) {
 		return esNulo(objeto) ? valorDefecto : objeto;
 	}
