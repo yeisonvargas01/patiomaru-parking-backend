@@ -1,4 +1,4 @@
-package co.edu.uco.patiomaruparking.transversal.excepcion;
+package co.edu.uco.patiomaruparking.transversal.utilitario.excepcion;
 
 public abstract class PatioMaruException extends Exception {
 
