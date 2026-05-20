@@ -1,7 +1,6 @@
 package co.edu.uco.patiomaruparking.negocio.casouso.pedido.impl;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import co.edu.uco.patiomaruparking.datos.dao.sql.factoria.DAOFactory;
@@ -11,6 +10,8 @@ import co.edu.uco.patiomaruparking.negocio.assembler.entidad.impl.PedidoEntidadA
 import co.edu.uco.patiomaruparking.negocio.casouso.pedido.ConsultarPedidosCasoUso;
 import co.edu.uco.patiomaruparking.negocio.dominio.DetallePedidoDominio;
 import co.edu.uco.patiomaruparking.negocio.dominio.PedidoDominio;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
 
 public final class ConsultarPedidosCasoUsoImpl implements ConsultarPedidosCasoUso {
 
@@ -30,12 +31,15 @@ public final class ConsultarPedidosCasoUsoImpl implements ConsultarPedidosCasoUs
 		validarFiltro(filtro);
 
 		// 2. Consultar información de los pedidos según los filtros enviados.
-		var filtroEntidad = PedidoEntidadAssembler.getInstance().ensamblarEntidad(
-				Objects.isNull(filtro) ? PedidoDominio.builder().build() : filtro);
+		var filtroSeguro = UtilObjeto.esNulo(filtro)
+				? PedidoDominio.builder().build()
+				: filtro;
+
+		var filtroEntidad = PedidoEntidadAssembler.getInstance().ensamblarEntidad(filtroSeguro);
 
 		var pedidosEntidad = daoFactory.obtenerPedidoDAO().consultar(filtroEntidad);
 
-		if (Objects.isNull(pedidosEntidad) || pedidosEntidad.isEmpty()) {
+		if (UtilObjeto.esNulo(pedidosEntidad) || pedidosEntidad.isEmpty()) {
 			return List.of();
 		}
 
@@ -47,21 +51,21 @@ public final class ConsultarPedidosCasoUsoImpl implements ConsultarPedidosCasoUs
 	}
 
 	private void validarFiltro(final PedidoDominio filtro) {
-		if (Objects.isNull(filtro)) {
+		if (UtilObjeto.esNulo(filtro)) {
 			return;
 		}
 
-		if (tieneTexto(filtro.getCodigoPedido())
-				&& filtro.getCodigoPedido().trim().length() != LONGITUD_CODIGO_PEDIDO) {
+		if (UtilTexto.tieneTexto(filtro.getCodigoPedido())
+				&& UtilTexto.aplicarTrim(filtro.getCodigoPedido()).length() != LONGITUD_CODIGO_PEDIDO) {
 			throw new RuntimeException("El código del pedido debe tener exactamente "
 					+ LONGITUD_CODIGO_PEDIDO + " caracteres.");
 		}
 
-		if (tieneTexto(filtro.getTipoAtencion())) {
+		if (UtilTexto.tieneTexto(filtro.getTipoAtencion())) {
 			validarLongitud(filtro.getTipoAtencion(), 4, 11, "El tipo de atención");
 		}
 
-		if (tieneTexto(filtro.getEstado())) {
+		if (UtilTexto.tieneTexto(filtro.getEstado())) {
 			validarLongitud(filtro.getEstado(), 6, 14, "El estado del pedido");
 		}
 	}
@@ -69,14 +73,16 @@ public final class ConsultarPedidosCasoUsoImpl implements ConsultarPedidosCasoUs
 	private void validarLongitud(final String valor, final int longitudMinima, final int longitudMaxima,
 			final String nombreCampo) {
 
-		if (valor.trim().length() < longitudMinima || valor.trim().length() > longitudMaxima) {
+		var valorSeguro = UtilTexto.aplicarTrim(valor);
+
+		if (valorSeguro.length() < longitudMinima || valorSeguro.length() > longitudMaxima) {
 			throw new RuntimeException(nombreCampo + " debe tener entre " + longitudMinima + " y "
 					+ longitudMaxima + " caracteres.");
 		}
 	}
 
 	private PedidoDominio agregarDetallesAlPedido(final PedidoDominio pedido) {
-		if (Objects.isNull(pedido) || !tieneTexto(pedido.getCodigoPedido())) {
+		if (UtilObjeto.esNulo(pedido) || !UtilTexto.tieneTexto(pedido.getCodigoPedido())) {
 			return pedido;
 		}
 
@@ -98,21 +104,17 @@ public final class ConsultarPedidosCasoUsoImpl implements ConsultarPedidosCasoUs
 
 	private List<DetallePedidoDominio> consultarDetallesDelPedido(final String codigoPedido) {
 		var filtroDetalle = DetallePedidoEntidad.builder()
-				.codigoPedido(codigoPedido)
+				.codigoPedido(UtilTexto.aplicarTrim(codigoPedido))
 				.build();
 
 		var detallesEntidad = daoFactory.obtenerDetallePedidoDAO().consultar(filtroDetalle);
 
-		if (Objects.isNull(detallesEntidad) || detallesEntidad.isEmpty()) {
+		if (UtilObjeto.esNulo(detallesEntidad) || detallesEntidad.isEmpty()) {
 			return List.of();
 		}
 
 		return detallesEntidad.stream()
 				.map(DetallePedidoEntidadAssembler.getInstance()::ensamblarDominio)
 				.collect(Collectors.toList());
-	}
-
-	private boolean tieneTexto(final String texto) {
-		return Objects.nonNull(texto) && !texto.trim().isEmpty();
 	}
 }

@@ -1,12 +1,10 @@
 package co.edu.uco.patiomaruparking.negocio.casouso.pedido.impl;
 
 import java.math.BigDecimal;
-import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import co.edu.uco.patiomaruparking.datos.dao.sql.factoria.DAOFactory;
 import co.edu.uco.patiomaruparking.entidad.PedidoEntidad;
@@ -23,11 +21,13 @@ import co.edu.uco.patiomaruparking.negocio.dominio.EmpleadoDominio;
 import co.edu.uco.patiomaruparking.negocio.dominio.MesaDominio;
 import co.edu.uco.patiomaruparking.negocio.dominio.PedidoDominio;
 import co.edu.uco.patiomaruparking.negocio.dominio.PlatoDominio;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilCodigo;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
 
 public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso {
 
 	private static final String ESTADO_PEDIDO_REGISTRADO = "REGISTRADO";
-	private static final SecureRandom RANDOM = new SecureRandom();
 
 	private final DAOFactory daoFactory;
 
@@ -83,25 +83,27 @@ public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso 
 	}
 
 	private void validarDatosConsistentes(final PedidoDominio datos) {
-		if (Objects.isNull(datos)) {
+		if (UtilObjeto.esNulo(datos)) {
 			throw new RuntimeException("Los datos del pedido son obligatorios.");
 		}
 
-		if (!tieneTexto(datos.getTipoAtencion())) {
+		if (!UtilTexto.tieneTexto(datos.getTipoAtencion())) {
 			throw new RuntimeException("El tipo de atención del pedido es obligatorio.");
 		}
 
 		validarLongitud(datos.getTipoAtencion(), 4, 11, "El tipo de atención");
 
-		if (Objects.isNull(datos.getCliente()) || !tieneTexto(datos.getCliente().getCodigoCliente())) {
+		if (UtilObjeto.esNulo(datos.getCliente())
+				|| !UtilTexto.tieneTexto(datos.getCliente().getCodigoCliente())) {
 			throw new RuntimeException("El cliente del pedido es obligatorio.");
 		}
 
-		if (Objects.isNull(datos.getEmpleado()) || !tieneTexto(datos.getEmpleado().getCodigoEmpleado())) {
+		if (UtilObjeto.esNulo(datos.getEmpleado())
+				|| !UtilTexto.tieneTexto(datos.getEmpleado().getCodigoEmpleado())) {
 			throw new RuntimeException("El empleado que registra el pedido es obligatorio.");
 		}
 
-		if (Objects.isNull(datos.getDetalles()) || datos.getDetalles().isEmpty()) {
+		if (UtilObjeto.esNulo(datos.getDetalles()) || datos.getDetalles().isEmpty()) {
 			throw new RuntimeException("El pedido debe tener al menos un detalle registrado.");
 		}
 	}
@@ -109,27 +111,29 @@ public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso 
 	private void validarLongitud(final String valor, final int longitudMinima, final int longitudMaxima,
 			final String nombreCampo) {
 
-		if (valor.trim().length() < longitudMinima || valor.trim().length() > longitudMaxima) {
+		var valorSeguro = UtilTexto.aplicarTrim(valor);
+
+		if (valorSeguro.length() < longitudMinima || valorSeguro.length() > longitudMaxima) {
 			throw new RuntimeException(nombreCampo + " debe tener entre " + longitudMinima + " y "
 					+ longitudMaxima + " caracteres.");
 		}
 	}
 
 	private LocalDate obtenerFechaRegistro(final PedidoDominio datos) {
-		return Objects.nonNull(datos.getFechaRegistro()) ? datos.getFechaRegistro() : LocalDate.now();
+		return UtilObjeto.noEsNulo(datos.getFechaRegistro()) ? datos.getFechaRegistro() : LocalDate.now();
 	}
 
 	private LocalTime obtenerHoraRegistro(final PedidoDominio datos) {
-		return Objects.nonNull(datos.getHoraRegistro()) ? datos.getHoraRegistro().withNano(0)
+		return UtilObjeto.noEsNulo(datos.getHoraRegistro()) ? datos.getHoraRegistro().withNano(0)
 				: LocalTime.now().withNano(0);
 	}
 
 	private ClienteDominio validarYObtenerCliente(final PedidoDominio datos) {
-		var codigoCliente = datos.getCliente().getCodigoCliente();
+		var codigoCliente = UtilTexto.aplicarTrim(datos.getCliente().getCodigoCliente());
 
 		var clienteEntidad = daoFactory.obtenerClienteDAO().consultarPorId(codigoCliente);
 
-		if (Objects.isNull(clienteEntidad)) {
+		if (UtilObjeto.esNulo(clienteEntidad)) {
 			throw new RuntimeException("No existe un cliente registrado con el código indicado.");
 		}
 
@@ -143,11 +147,11 @@ public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso 
 	}
 
 	private EmpleadoDominio validarYObtenerEmpleado(final PedidoDominio datos) {
-		var codigoEmpleado = datos.getEmpleado().getCodigoEmpleado();
+		var codigoEmpleado = UtilTexto.aplicarTrim(datos.getEmpleado().getCodigoEmpleado());
 
 		var empleadoEntidad = daoFactory.obtenerEmpleadoDAO().consultarPorId(codigoEmpleado);
 
-		if (Objects.isNull(empleadoEntidad)) {
+		if (UtilObjeto.esNulo(empleadoEntidad)) {
 			throw new RuntimeException("No existe un empleado registrado con el código indicado.");
 		}
 
@@ -162,10 +166,13 @@ public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso 
 
 	private MesaDominio validarYObtenerMesaSiAplica(final PedidoDominio datos) {
 		if (!requiereMesa(datos.getTipoAtencion())) {
-			if (Objects.nonNull(datos.getMesa()) && tieneTexto(datos.getMesa().getCodigoMesa())) {
-				var mesaEntidad = daoFactory.obtenerMesaDAO().consultarPorId(datos.getMesa().getCodigoMesa());
+			if (UtilObjeto.noEsNulo(datos.getMesa())
+					&& UtilTexto.tieneTexto(datos.getMesa().getCodigoMesa())) {
 
-				if (Objects.isNull(mesaEntidad)) {
+				var mesaEntidad = daoFactory.obtenerMesaDAO()
+						.consultarPorId(UtilTexto.aplicarTrim(datos.getMesa().getCodigoMesa()));
+
+				if (UtilObjeto.esNulo(mesaEntidad)) {
 					throw new RuntimeException("No existe una mesa registrada con el código indicado.");
 				}
 
@@ -175,13 +182,14 @@ public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso 
 			return MesaDominio.builder().build();
 		}
 
-		if (Objects.isNull(datos.getMesa()) || !tieneTexto(datos.getMesa().getCodigoMesa())) {
+		if (UtilObjeto.esNulo(datos.getMesa()) || !UtilTexto.tieneTexto(datos.getMesa().getCodigoMesa())) {
 			throw new RuntimeException("La mesa es obligatoria cuando el tipo de atención es en mesa.");
 		}
 
-		var mesaEntidad = daoFactory.obtenerMesaDAO().consultarPorId(datos.getMesa().getCodigoMesa());
+		var mesaEntidad = daoFactory.obtenerMesaDAO()
+				.consultarPorId(UtilTexto.aplicarTrim(datos.getMesa().getCodigoMesa()));
 
-		if (Objects.isNull(mesaEntidad)) {
+		if (UtilObjeto.esNulo(mesaEntidad)) {
 			throw new RuntimeException("No existe una mesa registrada con el código indicado.");
 		}
 
@@ -189,10 +197,10 @@ public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso 
 	}
 
 	private boolean requiereMesa(final String tipoAtencion) {
-		return "MESA".equalsIgnoreCase(tipoAtencion)
-				|| "EN MESA".equalsIgnoreCase(tipoAtencion)
-				|| "SERVICIO MESA".equalsIgnoreCase(tipoAtencion)
-				|| "SERVICIO EN MESA".equalsIgnoreCase(tipoAtencion);
+		return UtilTexto.sonIgualesIgnorandoMayusculas(tipoAtencion, "MESA")
+				|| UtilTexto.sonIgualesIgnorandoMayusculas(tipoAtencion, "EN MESA")
+				|| UtilTexto.sonIgualesIgnorandoMayusculas(tipoAtencion, "SERVICIO MESA")
+				|| UtilTexto.sonIgualesIgnorandoMayusculas(tipoAtencion, "SERVICIO EN MESA");
 	}
 
 	private void validarNoExistePedidoConMismaCombinacion(final PedidoDominio datos, final LocalDate fechaRegistro,
@@ -221,17 +229,20 @@ public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso 
 			final LocalDate fechaRegistro, final LocalTime horaRegistro, final String tipoAtencion,
 			final ClienteDominio cliente, final EmpleadoDominio empleado, final MesaDominio mesa) {
 
-		if (Objects.isNull(resultados) || resultados.isEmpty()) {
+		if (UtilObjeto.esNulo(resultados) || resultados.isEmpty()) {
 			return false;
 		}
 
 		for (PedidoEntidad pedido : resultados) {
-			if (Objects.equals(pedido.getFechaRegistro(), fechaRegistro)
-					&& Objects.equals(pedido.getHoraRegistro(), horaRegistro)
-					&& textoIgual(pedido.getTipoAtencion(), tipoAtencion)
-					&& textoIgual(pedido.getCliente().getCodigoCliente(), cliente.getCodigoCliente())
-					&& textoIgual(pedido.getEmpleado().getCodigoEmpleado(), empleado.getCodigoEmpleado())
-					&& textoIgual(pedido.getMesa().getCodigoMesa(), mesa.getCodigoMesa())) {
+			if (fechaIgual(pedido.getFechaRegistro(), fechaRegistro)
+					&& horaIgual(pedido.getHoraRegistro(), horaRegistro)
+					&& UtilTexto.sonIgualesIgnorandoMayusculas(pedido.getTipoAtencion(), tipoAtencion)
+					&& UtilTexto.sonIgualesIgnorandoMayusculas(
+							pedido.getCliente().getCodigoCliente(), cliente.getCodigoCliente())
+					&& UtilTexto.sonIgualesIgnorandoMayusculas(
+							pedido.getEmpleado().getCodigoEmpleado(), empleado.getCodigoEmpleado())
+					&& UtilTexto.sonIgualesIgnorandoMayusculas(
+							pedido.getMesa().getCodigoMesa(), mesa.getCodigoMesa())) {
 				return true;
 			}
 		}
@@ -264,25 +275,26 @@ public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso 
 	}
 
 	private void validarDatosConsistentesDetalle(final DetallePedidoDominio detalle) {
-		if (Objects.isNull(detalle)) {
+		if (UtilObjeto.esNulo(detalle)) {
 			throw new RuntimeException("La información del detalle del pedido es obligatoria.");
 		}
 
-		if (Objects.isNull(detalle.getCantidad()) || detalle.getCantidad() <= 0) {
+		if (UtilObjeto.esNulo(detalle.getCantidad()) || detalle.getCantidad() <= 0) {
 			throw new RuntimeException("La cantidad del detalle del pedido debe ser mayor que cero.");
 		}
 
-		if (Objects.isNull(detalle.getPlato()) || !tieneTexto(detalle.getPlato().getCodigoPlato())) {
+		if (UtilObjeto.esNulo(detalle.getPlato())
+				|| !UtilTexto.tieneTexto(detalle.getPlato().getCodigoPlato())) {
 			throw new RuntimeException("El plato del detalle del pedido es obligatorio.");
 		}
 	}
 
 	private PlatoDominio validarYObtenerPlato(final DetallePedidoDominio detalle) {
-		var codigoPlato = detalle.getPlato().getCodigoPlato();
+		var codigoPlato = UtilTexto.aplicarTrim(detalle.getPlato().getCodigoPlato());
 
 		var platoEntidad = daoFactory.obtenerPlatoDAO().consultarPorId(codigoPlato);
 
-		if (Objects.isNull(platoEntidad)) {
+		if (UtilObjeto.esNulo(platoEntidad)) {
 			throw new RuntimeException("No existe un plato registrado con el código indicado.");
 		}
 
@@ -326,37 +338,45 @@ public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso 
 		PedidoEntidad pedidoExistente;
 
 		do {
-			codigoPedido = generarCodigo("PED");
+			codigoPedido = UtilCodigo.generarCodigo("PED");
 			pedidoExistente = daoFactory.obtenerPedidoDAO().consultarPorId(codigoPedido);
-		} while (Objects.nonNull(pedidoExistente));
+		} while (UtilObjeto.noEsNulo(pedidoExistente));
 
 		return codigoPedido;
 	}
 
 	private String generarCodigoUnicoDetallePedido() {
 		String codigoDetallePedido;
-		var detalleExistente = false;
 
 		do {
-			codigoDetallePedido = generarCodigo("DPE");
-			detalleExistente = Objects.nonNull(
-					daoFactory.obtenerDetallePedidoDAO().consultarPorId(codigoDetallePedido));
-		} while (detalleExistente);
+			codigoDetallePedido = UtilCodigo.generarCodigo("DPE");
+		} while (UtilObjeto.noEsNulo(
+				daoFactory.obtenerDetallePedidoDAO().consultarPorId(codigoDetallePedido)));
 
 		return codigoDetallePedido;
 	}
 
-	private String generarCodigo(final String prefijo) {
-		var numero = RANDOM.nextInt(10000);
-		return prefijo + String.format("%04d", numero);
+	private boolean fechaIgual(final LocalDate fechaUno, final LocalDate fechaDos) {
+		if (UtilObjeto.esNulo(fechaUno) && UtilObjeto.esNulo(fechaDos)) {
+			return true;
+		}
+
+		if (UtilObjeto.esNulo(fechaUno) || UtilObjeto.esNulo(fechaDos)) {
+			return false;
+		}
+
+		return fechaUno.equals(fechaDos);
 	}
 
-	private boolean tieneTexto(final String texto) {
-		return Objects.nonNull(texto) && !texto.trim().isEmpty();
-	}
+	private boolean horaIgual(final LocalTime horaUno, final LocalTime horaDos) {
+		if (UtilObjeto.esNulo(horaUno) && UtilObjeto.esNulo(horaDos)) {
+			return true;
+		}
 
-	private boolean textoIgual(final String textoUno, final String textoDos) {
-		return Objects.toString(textoUno, "").trim()
-				.equalsIgnoreCase(Objects.toString(textoDos, "").trim());
+		if (UtilObjeto.esNulo(horaUno) || UtilObjeto.esNulo(horaDos)) {
+			return false;
+		}
+
+		return horaUno.equals(horaDos);
 	}
 }

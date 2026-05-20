@@ -1,7 +1,6 @@
 package co.edu.uco.patiomaruparking.negocio.casouso.pedido.impl;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import co.edu.uco.patiomaruparking.datos.dao.sql.factoria.DAOFactory;
@@ -11,6 +10,8 @@ import co.edu.uco.patiomaruparking.negocio.assembler.entidad.impl.PedidoEntidadA
 import co.edu.uco.patiomaruparking.negocio.casouso.pedido.ConsultarPedidoPorIdCasoUso;
 import co.edu.uco.patiomaruparking.negocio.dominio.DetallePedidoDominio;
 import co.edu.uco.patiomaruparking.negocio.dominio.PedidoDominio;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
 
 public final class ConsultarPedidoPorIdCasoUsoImpl implements ConsultarPedidoPorIdCasoUso {
 
@@ -29,15 +30,17 @@ public final class ConsultarPedidoPorIdCasoUsoImpl implements ConsultarPedidoPor
 		// tipo de dato, longitud, obligatoriedad, formato y rango.
 		validarCodigoPedido(codigoPedido);
 
-		// 2. Debe existir un pedido registrado con el identificador indicado.
-		var pedidoEntidad = daoFactory.obtenerPedidoDAO().consultarPorId(codigoPedido.trim());
+		var codigoPedidoNormalizado = UtilTexto.aplicarTrim(codigoPedido);
 
-		if (Objects.isNull(pedidoEntidad)) {
+		// 2. Debe existir un pedido registrado con el identificador indicado.
+		var pedidoEntidad = daoFactory.obtenerPedidoDAO().consultarPorId(codigoPedidoNormalizado);
+
+		if (UtilObjeto.esNulo(pedidoEntidad)) {
 			throw new RuntimeException("No existe un pedido registrado con el código indicado.");
 		}
 
 		// 3. Consultar los detalles asociados al pedido.
-		var detalles = consultarDetallesDelPedido(codigoPedido.trim());
+		var detalles = consultarDetallesDelPedido(codigoPedidoNormalizado);
 
 		var pedido = PedidoEntidadAssembler.getInstance().ensamblarDominio(pedidoEntidad);
 
@@ -56,11 +59,11 @@ public final class ConsultarPedidoPorIdCasoUsoImpl implements ConsultarPedidoPor
 	}
 
 	private void validarCodigoPedido(final String codigoPedido) {
-		if (!tieneTexto(codigoPedido)) {
+		if (!UtilTexto.tieneTexto(codigoPedido)) {
 			throw new RuntimeException("El código del pedido es obligatorio.");
 		}
 
-		if (codigoPedido.trim().length() != LONGITUD_CODIGO_PEDIDO) {
+		if (UtilTexto.aplicarTrim(codigoPedido).length() != LONGITUD_CODIGO_PEDIDO) {
 			throw new RuntimeException("El código del pedido debe tener exactamente "
 					+ LONGITUD_CODIGO_PEDIDO + " caracteres.");
 		}
@@ -68,21 +71,17 @@ public final class ConsultarPedidoPorIdCasoUsoImpl implements ConsultarPedidoPor
 
 	private List<DetallePedidoDominio> consultarDetallesDelPedido(final String codigoPedido) {
 		var filtro = DetallePedidoEntidad.builder()
-				.codigoPedido(codigoPedido)
+				.codigoPedido(UtilTexto.aplicarTrim(codigoPedido))
 				.build();
 
 		var detallesEntidad = daoFactory.obtenerDetallePedidoDAO().consultar(filtro);
 
-		if (Objects.isNull(detallesEntidad) || detallesEntidad.isEmpty()) {
+		if (UtilObjeto.esNulo(detallesEntidad) || detallesEntidad.isEmpty()) {
 			return List.of();
 		}
 
 		return detallesEntidad.stream()
 				.map(DetallePedidoEntidadAssembler.getInstance()::ensamblarDominio)
 				.collect(Collectors.toList());
-	}
-
-	private boolean tieneTexto(final String texto) {
-		return Objects.nonNull(texto) && !texto.trim().isEmpty();
 	}
 }

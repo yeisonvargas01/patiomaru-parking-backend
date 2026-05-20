@@ -1,10 +1,10 @@
 package co.edu.uco.patiomaruparking.negocio.casouso.pedido.impl;
 
-import java.util.Objects;
-
 import co.edu.uco.patiomaruparking.datos.dao.sql.factoria.DAOFactory;
 import co.edu.uco.patiomaruparking.negocio.assembler.entidad.impl.PedidoEntidadAssembler;
 import co.edu.uco.patiomaruparking.negocio.casouso.pedido.CancelarPedidoCasoUso;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
 
 public final class CancelarPedidoCasoUsoImpl implements CancelarPedidoCasoUso {
 
@@ -26,12 +26,12 @@ public final class CancelarPedidoCasoUsoImpl implements CancelarPedidoCasoUso {
 		// tipo de dato, longitud, obligatoriedad, formato y rango.
 		validarCodigoPedido(codigoPedido);
 
-		var codigoPedidoNormalizado = codigoPedido.trim();
+		var codigoPedidoNormalizado = UtilTexto.aplicarTrim(codigoPedido);
 
 		// 2. Debe existir un pedido registrado con el código indicado.
 		var pedidoEntidad = daoFactory.obtenerPedidoDAO().consultarPorId(codigoPedidoNormalizado);
 
-		if (Objects.isNull(pedidoEntidad)) {
+		if (UtilObjeto.esNulo(pedidoEntidad)) {
 			throw new RuntimeException("No existe un pedido registrado con el código indicado.");
 		}
 
@@ -39,12 +39,12 @@ public final class CancelarPedidoCasoUsoImpl implements CancelarPedidoCasoUso {
 		var estadoActual = normalizarEstado(pedido.getEstado());
 
 		// 3. No se debe cancelar un pedido que ya se encuentra cancelado.
-		if (ESTADO_CANCELADO.equalsIgnoreCase(estadoActual)) {
+		if (UtilTexto.sonIgualesIgnorandoMayusculas(estadoActual, ESTADO_CANCELADO)) {
 			throw new RuntimeException("El pedido ya se encuentra cancelado.");
 		}
 
 		// 4. No se debe cancelar un pedido que ya fue entregado.
-		if (ESTADO_ENTREGADO.equalsIgnoreCase(estadoActual)) {
+		if (UtilTexto.sonIgualesIgnorandoMayusculas(estadoActual, ESTADO_ENTREGADO)) {
 			throw new RuntimeException("No es posible cancelar un pedido que ya fue entregado.");
 		}
 
@@ -53,23 +53,17 @@ public final class CancelarPedidoCasoUsoImpl implements CancelarPedidoCasoUso {
 	}
 
 	private void validarCodigoPedido(final String codigoPedido) {
-		if (!tieneTexto(codigoPedido)) {
+		if (!UtilTexto.tieneTexto(codigoPedido)) {
 			throw new RuntimeException("El código del pedido es obligatorio.");
 		}
 
-		if (codigoPedido.trim().length() != LONGITUD_CODIGO_PEDIDO) {
+		if (UtilTexto.aplicarTrim(codigoPedido).length() != LONGITUD_CODIGO_PEDIDO) {
 			throw new RuntimeException("El código del pedido debe tener exactamente "
 					+ LONGITUD_CODIGO_PEDIDO + " caracteres.");
 		}
 	}
 
 	private String normalizarEstado(final String estado) {
-		return Objects.toString(estado, "")
-				.trim()
-				.toUpperCase();
-	}
-
-	private boolean tieneTexto(final String texto) {
-		return Objects.nonNull(texto) && !texto.trim().isEmpty();
+		return UtilTexto.aplicarTrimConvertirMayusculas(estado);
 	}
 }

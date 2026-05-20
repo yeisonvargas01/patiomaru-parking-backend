@@ -8,64 +8,71 @@ import co.edu.uco.patiomaruparking.entidad.PlatoEntidad;
 import co.edu.uco.patiomaruparking.negocio.assembler.entidad.impl.DetallePedidoEntidadAssembler;
 import co.edu.uco.patiomaruparking.negocio.assembler.entidad.impl.PedidoEntidadAssembler;
 import co.edu.uco.patiomaruparking.negocio.assembler.entidad.impl.PlatoEntidadAssembler;
-import co.edu.uco.patiomaruparking.negocio.casouso.detallepedido.RegistrarDetallePedidoCasoUso;
+import co.edu.uco.patiomaruparking.negocio.casouso.detallepedido.ActualizarDetallePedidoCasoUso;
 import co.edu.uco.patiomaruparking.negocio.dominio.DetallePedidoDominio;
 import co.edu.uco.patiomaruparking.negocio.dominio.PedidoDominio;
 import co.edu.uco.patiomaruparking.negocio.dominio.PlatoDominio;
-import co.edu.uco.patiomaruparking.transversal.utilitario.UtilCodigo;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
 
-public final class RegistrarDetallePedidoCasoUsoImpl implements RegistrarDetallePedidoCasoUso {
+public final class ActualizarDetallePedidoCasoUsoImpl implements ActualizarDetallePedidoCasoUso {
 
+	private static final int LONGITUD_CODIGO_DETALLE_PEDIDO = 5;
 	private static final int LONGITUD_CODIGO_PEDIDO = 7;
+	private static final int LONGITUD_CODIGO_PLATO = 6;
+
 	private static final String ESTADO_CANCELADO = "CANCELADO";
 	private static final String ESTADO_ENTREGADO = "ENTREGADO";
 
 	private final DAOFactory daoFactory;
 
-	public RegistrarDetallePedidoCasoUsoImpl(final DAOFactory daoFactory) {
+	public ActualizarDetallePedidoCasoUsoImpl(final DAOFactory daoFactory) {
 		this.daoFactory = daoFactory;
 	}
 
 	@Override
-	public DetallePedidoDominio ejecutar(final DetallePedidoDominio datos) {
+	public void ejecutar(final DetallePedidoDominio datos) {
 
 		// 1. Validación de datos consistentes:
 		// tipo de dato, longitud, obligatoriedad, formato y rango.
 		validarDatosConsistentes(datos);
 
-		// 2. Debe existir el pedido al que pertenece el detalle.
-		var pedido = validarYObtenerPedido(datos.getCodigoPedido());
+		var codigoDetallePedido = UtilTexto.aplicarTrim(datos.getCodigoDetallePedido());
+		var codigoPedido = UtilTexto.aplicarTrim(datos.getCodigoPedido());
 
-		// 3. No se debe registrar un detalle en un pedido cancelado o entregado.
-		validarPedidoPermiteRegistrarDetalle(pedido);
+		// 2. Debe existir el detalle del pedido que se desea actualizar.
+		var detalleActualEntidad = daoFactory.obtenerDetallePedidoDAO().consultarPorId(codigoDetallePedido);
 
-		// 4. Debe existir el plato asociado al detalle y debe estar disponible.
+		if (UtilObjeto.esNulo(detalleActualEntidad)) {
+			throw new RuntimeException("No existe un detalle de pedido registrado con el código indicado.");
+		}
+
+		// 3. Debe existir el pedido al que pertenece el detalle.
+		var pedido = validarYObtenerPedido(codigoPedido);
+
+		// 4. No se debe actualizar un detalle de un pedido cancelado o entregado.
+		validarPedidoPermiteActualizarDetalle(pedido);
+
+		// 5. Debe existir el plato asociado al detalle y debe estar disponible.
 		var plato = validarYObtenerPlato(datos);
 
-		// 5. No debe existir un detalle con la misma combinación única documentada:
+		// 6. No debe existir otro detalle con la misma combinación única documentada:
 		// pedido + plato.
-		validarNoExisteDetalleConMismoPedidoYPlato(datos.getCodigoPedido(), plato.getCodigoPlato());
-
-		// 6. El código del detalle del pedido debe ser único.
-		var codigoDetallePedido = generarCodigoUnicoDetallePedido();
+		validarNoExisteOtroDetalleConMismoPedidoYPlato(codigoDetallePedido, codigoPedido, plato.getCodigoPlato());
 
 		// 7. Cálculo de valores:
 		// subtotal = cantidad * precioVenta del plato.
 		var subtotal = calcularSubtotal(datos.getCantidad(), plato.getPrecioVenta());
 
-		var detallePreparado = DetallePedidoDominio.builder()
+		var detalleActualizado = DetallePedidoDominio.builder()
 				.codigoDetallePedido(codigoDetallePedido)
-				.codigoPedido(UtilTexto.aplicarTrim(datos.getCodigoPedido()))
+				.codigoPedido(codigoPedido)
 				.cantidad(datos.getCantidad())
 				.plato(plato)
 				.subtotal(subtotal)
 				.build();
 
-		guardar(detallePreparado);
-
-		return detallePreparado;
+		actualizar(detalleActualizado);
 	}
 
 	private void validarDatosConsistentes(final DetallePedidoDominio datos) {
@@ -73,8 +80,17 @@ public final class RegistrarDetallePedidoCasoUsoImpl implements RegistrarDetalle
 			throw new RuntimeException("Los datos del detalle del pedido son obligatorios.");
 		}
 
+		if (!UtilTexto.tieneTexto(datos.getCodigoDetallePedido())) {
+			throw new RuntimeException("El código del detalle del pedido es obligatorio.");
+		}
+
+		if (UtilTexto.aplicarTrim(datos.getCodigoDetallePedido()).length() != LONGITUD_CODIGO_DETALLE_PEDIDO) {
+			throw new RuntimeException("El código del detalle del pedido debe tener exactamente "
+					+ LONGITUD_CODIGO_DETALLE_PEDIDO + " caracteres.");
+		}
+
 		if (!UtilTexto.tieneTexto(datos.getCodigoPedido())) {
-			throw new RuntimeException("El código del pedido es obligatorio para registrar el detalle.");
+			throw new RuntimeException("El código del pedido es obligatorio.");
 		}
 
 		if (UtilTexto.aplicarTrim(datos.getCodigoPedido()).length() != LONGITUD_CODIGO_PEDIDO) {
@@ -94,12 +110,15 @@ public final class RegistrarDetallePedidoCasoUsoImpl implements RegistrarDetalle
 				|| !UtilTexto.tieneTexto(datos.getPlato().getCodigoPlato())) {
 			throw new RuntimeException("El plato del detalle del pedido es obligatorio.");
 		}
+
+		if (UtilTexto.aplicarTrim(datos.getPlato().getCodigoPlato()).length() != LONGITUD_CODIGO_PLATO) {
+			throw new RuntimeException("El código del plato debe tener exactamente "
+					+ LONGITUD_CODIGO_PLATO + " caracteres.");
+		}
 	}
 
 	private PedidoDominio validarYObtenerPedido(final String codigoPedido) {
-		var codigoPedidoNormalizado = UtilTexto.aplicarTrim(codigoPedido);
-
-		var pedidoEntidad = daoFactory.obtenerPedidoDAO().consultarPorId(codigoPedidoNormalizado);
+		var pedidoEntidad = daoFactory.obtenerPedidoDAO().consultarPorId(codigoPedido);
 
 		if (UtilObjeto.esNulo(pedidoEntidad)) {
 			throw new RuntimeException("No existe un pedido registrado con el código indicado.");
@@ -108,15 +127,15 @@ public final class RegistrarDetallePedidoCasoUsoImpl implements RegistrarDetalle
 		return PedidoEntidadAssembler.getInstance().ensamblarDominio(pedidoEntidad);
 	}
 
-	private void validarPedidoPermiteRegistrarDetalle(final PedidoDominio pedido) {
+	private void validarPedidoPermiteActualizarDetalle(final PedidoDominio pedido) {
 		var estadoPedido = UtilTexto.aplicarTrimConvertirMayusculas(pedido.getEstado());
 
 		if (UtilTexto.sonIgualesIgnorandoMayusculas(estadoPedido, ESTADO_CANCELADO)) {
-			throw new RuntimeException("No es posible registrar detalles en un pedido cancelado.");
+			throw new RuntimeException("No es posible actualizar detalles de un pedido cancelado.");
 		}
 
 		if (UtilTexto.sonIgualesIgnorandoMayusculas(estadoPedido, ESTADO_ENTREGADO)) {
-			throw new RuntimeException("No es posible registrar detalles en un pedido entregado.");
+			throw new RuntimeException("No es posible actualizar detalles de un pedido entregado.");
 		}
 	}
 
@@ -142,18 +161,27 @@ public final class RegistrarDetallePedidoCasoUsoImpl implements RegistrarDetalle
 		return plato;
 	}
 
-	private void validarNoExisteDetalleConMismoPedidoYPlato(final String codigoPedido, final String codigoPlato) {
+	private void validarNoExisteOtroDetalleConMismoPedidoYPlato(final String codigoDetallePedido,
+			final String codigoPedido, final String codigoPlato) {
+
 		var filtro = DetallePedidoEntidad.builder()
-				.codigoPedido(UtilTexto.aplicarTrim(codigoPedido))
+				.codigoPedido(codigoPedido)
 				.plato(PlatoEntidad.builder()
-						.codigoPlato(UtilTexto.aplicarTrim(codigoPlato))
+						.codigoPlato(codigoPlato)
 						.build())
 				.build();
 
 		var resultados = daoFactory.obtenerDetallePedidoDAO().consultar(filtro);
 
-		if (UtilObjeto.noEsNulo(resultados) && !resultados.isEmpty()) {
-			throw new RuntimeException("Ya existe un detalle registrado para el mismo pedido y el mismo plato.");
+		if (UtilObjeto.esNulo(resultados) || resultados.isEmpty()) {
+			return;
+		}
+
+		for (DetallePedidoEntidad detalle : resultados) {
+			if (!UtilTexto.sonIgualesIgnorandoMayusculas(
+					detalle.getCodigoDetallePedido(), codigoDetallePedido)) {
+				throw new RuntimeException("Ya existe otro detalle registrado para el mismo pedido y el mismo plato.");
+			}
 		}
 	}
 
@@ -161,20 +189,8 @@ public final class RegistrarDetallePedidoCasoUsoImpl implements RegistrarDetalle
 		return precioVenta.multiply(BigDecimal.valueOf(cantidad));
 	}
 
-	private void guardar(final DetallePedidoDominio detalle) {
+	private void actualizar(final DetallePedidoDominio detalle) {
 		var detalleEntidad = DetallePedidoEntidadAssembler.getInstance().ensamblarEntidad(detalle);
-		daoFactory.obtenerDetallePedidoDAO().registrar(detalleEntidad);
-	}
-
-	private String generarCodigoUnicoDetallePedido() {
-		String codigoDetallePedido;
-		DetallePedidoEntidad detalleExistente;
-
-		do {
-			codigoDetallePedido = UtilCodigo.generarCodigo("DP");
-			detalleExistente = daoFactory.obtenerDetallePedidoDAO().consultarPorId(codigoDetallePedido);
-		} while (UtilObjeto.noEsNulo(detalleExistente));
-
-		return codigoDetallePedido;
+		daoFactory.obtenerDetallePedidoDAO().actualizar(detalleEntidad);
 	}
 }
