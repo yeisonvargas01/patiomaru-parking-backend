@@ -1,5 +1,10 @@
 package co.edu.uco.patiomaruparking.negocio.fachada.cliente;
 
-public interface ConsultarClientesFachada {
+import java.util.List;
+
+import co.edu.uco.patiomaruparking.dto.ClienteDTO;
+import co.edu.uco.patiomaruparking.negocio.fachada.FachadaConRetorno;
+
+public interface ConsultarClientesFachada extends FachadaConRetorno<ClienteDTO, List<ClienteDTO>> {
 
 }

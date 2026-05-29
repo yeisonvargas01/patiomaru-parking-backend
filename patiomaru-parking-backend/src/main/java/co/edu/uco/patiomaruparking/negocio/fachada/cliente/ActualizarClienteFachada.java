@@ -1,5 +1,8 @@
 package co.edu.uco.patiomaruparking.negocio.fachada.cliente;
 
-public interface ActualizarClienteFachada {
+import co.edu.uco.patiomaruparking.dto.ClienteDTO;
+import co.edu.uco.patiomaruparking.negocio.fachada.FachadaSinRetorno;
+
+public interface ActualizarClienteFachada extends FachadaSinRetorno<ClienteDTO> {
 
 }
