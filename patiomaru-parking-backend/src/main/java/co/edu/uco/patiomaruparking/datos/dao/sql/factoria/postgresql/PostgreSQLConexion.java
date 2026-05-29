@@ -9,7 +9,7 @@ public final class PostgreSQLConexion {
     private static final String DRIVER = "org.postgresql.Driver";
     private static final String URL = "jdbc:postgresql://localhost:5433/patiomaru_parking";
     private static final String USUARIO = "postgres";
-    private static final String CLAVE = "postgres";
+    private static final String CLAVE = "Ajstyles4#";
 
     private PostgreSQLConexion() {
         super();
