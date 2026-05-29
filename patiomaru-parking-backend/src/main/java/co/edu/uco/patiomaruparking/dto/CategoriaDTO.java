@@ -1,60 +1,62 @@
 package co.edu.uco.patiomaruparking.dto;
 
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+
 public class CategoriaDTO {
 
-	private String codigoCategoria;
-	private String nombre;
+    private String codigoCategoria = UtilTexto.TEXTO_VACIO;
+    private String nombre = UtilTexto.TEXTO_VACIO;
 
-	private CategoriaDTO(final Builder builder) {
-		setCodigoCategoria(builder.codigoCategoria);
-		setNombre(builder.nombre);
-	}
+    public CategoriaDTO() {
+        super();
+    }
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    private CategoriaDTO(final Builder builder) {
+        setCodigoCategoria(builder.codigoCategoria);
+        setNombre(builder.nombre);
+    }
 
-	public String getCodigoCategoria() {
-		return codigoCategoria;
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	private void setCodigoCategoria(final String codigoCategoria) {
-		this.codigoCategoria = aplicarTrim(codigoCategoria);
-	}
+    public String getCodigoCategoria() {
+        return codigoCategoria;
+    }
 
-	public String getNombre() {
-		return nombre;
-	}
+    public void setCodigoCategoria(final String codigoCategoria) {
+        this.codigoCategoria = UtilTexto.aplicarTrim(codigoCategoria);
+    }
 
-	private void setNombre(final String nombre) {
-		this.nombre = aplicarTrim(nombre);
-	}
+    public String getNombre() {
+        return nombre;
+    }
 
-	public static class Builder {
+    public void setNombre(final String nombre) {
+        this.nombre = UtilTexto.aplicarTrim(nombre);
+    }
 
-		private String codigoCategoria;
-		private String nombre;
+    public static class Builder {
 
-		private Builder() {
-			super();
-		}
+        private String codigoCategoria = UtilTexto.TEXTO_VACIO;
+        private String nombre = UtilTexto.TEXTO_VACIO;
 
-		public Builder codigoCategoria(final String codigoCategoria) {
-			this.codigoCategoria = aplicarTrim(codigoCategoria);
-			return this;
-		}
+        private Builder() {
+            super();
+        }
 
-		public Builder nombre(final String nombre) {
-			this.nombre = aplicarTrim(nombre);
-			return this;
-		}
+        public Builder codigoCategoria(final String codigoCategoria) {
+            this.codigoCategoria = UtilTexto.aplicarTrim(codigoCategoria);
+            return this;
+        }
 
-		public CategoriaDTO build() {
-			return new CategoriaDTO(this);
-		}
-	}
+        public Builder nombre(final String nombre) {
+            this.nombre = UtilTexto.aplicarTrim(nombre);
+            return this;
+        }
 
-	private static String aplicarTrim(final String valor) {
-		return valor == null ? "" : valor.trim();
-	}
+        public CategoriaDTO build() {
+            return new CategoriaDTO(this);
+        }
+    }
 }

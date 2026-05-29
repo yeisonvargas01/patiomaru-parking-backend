@@ -1,87 +1,93 @@
 package co.edu.uco.patiomaruparking.negocio.assembler.dto.impl;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+import co.edu.uco.patiomaruparking.dto.DetallePedidoDTO;
 import co.edu.uco.patiomaruparking.dto.PedidoDTO;
 import co.edu.uco.patiomaruparking.negocio.assembler.dto.DTOAssembler;
+import co.edu.uco.patiomaruparking.negocio.dominio.DetallePedidoDominio;
 import co.edu.uco.patiomaruparking.negocio.dominio.PedidoDominio;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
 
 public final class PedidoDTOAssembler implements DTOAssembler<PedidoDominio, PedidoDTO> {
+	
+	private static final PedidoDTOAssembler INSTANCE = new PedidoDTOAssembler();
 
-	private static PedidoDTOAssembler INSTANCE = null;
+    private PedidoDTOAssembler() {
+        super();
+    }
 
-	private PedidoDTOAssembler() {
-		super();
-	}
+    public static PedidoDTOAssembler getInstance() {
+        return INSTANCE;
+    }
 
-	public static synchronized PedidoDTOAssembler getInstance() {
-		if (INSTANCE == null) {
-			INSTANCE = new PedidoDTOAssembler();
-		}
+    @Override
+    public PedidoDTO ensamblarDTO(final PedidoDominio dominio) {
+        var pedidoEnsamblar = UtilObjeto.obtenerValorDefecto(
+                dominio,
+                PedidoDominio.builder().build());
 
-		return INSTANCE;
-	}
+        return PedidoDTO.builder()
+                .codigoPedido(pedidoEnsamblar.getCodigoPedido())
+                .fechaRegistro(pedidoEnsamblar.getFechaRegistro())
+                .horaRegistro(pedidoEnsamblar.getHoraRegistro())
+                .tipoAtencion(pedidoEnsamblar.getTipoAtencion())
+                .estado(pedidoEnsamblar.getEstado())
+                .totalPedido(pedidoEnsamblar.getTotalPedido())
+                .mesa(MesaDTOAssembler.getInstance()
+                        .ensamblarDTO(pedidoEnsamblar.getMesa()))
+                .cliente(ClienteDTOAssembler.getInstance()
+                        .ensamblarDTO(pedidoEnsamblar.getCliente()))
+                .empleado(EmpleadoDTOAssembler.getInstance()
+                        .ensamblarDTO(pedidoEnsamblar.getEmpleado()))
+                .detalles(ensamblarDetallesDTO(pedidoEnsamblar.getDetalles()))
+                .build();
+    }
 
-	@Override
-	public PedidoDTO ensamblarDTO(final PedidoDominio dominio) {
-		var pedidoEnsamblar = dominio == null ? PedidoDominio.builder().build() : dominio;
+    @Override
+    public PedidoDominio ensamblarDominio(final PedidoDTO dto) {
+        var pedidoEnsamblar = UtilObjeto.obtenerValorDefecto(
+                dto,
+                PedidoDTO.builder().build());
 
-		return PedidoDTO.builder()
-				.codigoPedido(pedidoEnsamblar.getCodigoPedido())
-				.fechaRegistro(pedidoEnsamblar.getFechaRegistro())
-				.horaRegistro(pedidoEnsamblar.getHoraRegistro())
-				.tipoAtencion(pedidoEnsamblar.getTipoAtencion())
-				.estado(pedidoEnsamblar.getEstado())
-				.totalPedido(pedidoEnsamblar.getTotalPedido())
-				.mesa(MesaDTOAssembler.getInstance().ensamblarDTO(pedidoEnsamblar.getMesa()))
-				.cliente(ClienteDTOAssembler.getInstance().ensamblarDTO(pedidoEnsamblar.getCliente()))
-				.empleado(EmpleadoDTOAssembler.getInstance().ensamblarDTO(pedidoEnsamblar.getEmpleado()))
-				.detalles(ensamblarDetallesDTO(pedidoEnsamblar))
-				.build();
-	}
+        return PedidoDominio.builder()
+                .codigoPedido(pedidoEnsamblar.getCodigoPedido())
+                .fechaRegistro(pedidoEnsamblar.getFechaRegistro())
+                .horaRegistro(pedidoEnsamblar.getHoraRegistro())
+                .tipoAtencion(pedidoEnsamblar.getTipoAtencion())
+                .estado(pedidoEnsamblar.getEstado())
+                .totalPedido(pedidoEnsamblar.getTotalPedido())
+                .mesa(MesaDTOAssembler.getInstance()
+                        .ensamblarDominio(pedidoEnsamblar.getMesa()))
+                .cliente(ClienteDTOAssembler.getInstance()
+                        .ensamblarDominio(pedidoEnsamblar.getCliente()))
+                .empleado(EmpleadoDTOAssembler.getInstance()
+                        .ensamblarDominio(pedidoEnsamblar.getEmpleado()))
+                .detalles(ensamblarDetallesDominio(pedidoEnsamblar.getDetalles()))
+                .build();
+    }
 
-	@Override
-	public PedidoDominio ensamblarDominio(final PedidoDTO dto) {
-		var pedidoEnsamblar = dto == null ? PedidoDTO.builder().build() : dto;
+    private List<DetallePedidoDTO> ensamblarDetallesDTO(
+            final List<DetallePedidoDominio> detallesDominio) {
 
-		return PedidoDominio.builder()
-				.codigoPedido(pedidoEnsamblar.getCodigoPedido())
-				.fechaRegistro(pedidoEnsamblar.getFechaRegistro())
-				.horaRegistro(pedidoEnsamblar.getHoraRegistro())
-				.tipoAtencion(pedidoEnsamblar.getTipoAtencion())
-				.estado(pedidoEnsamblar.getEstado())
-				.totalPedido(pedidoEnsamblar.getTotalPedido())
-				.mesa(MesaDTOAssembler.getInstance().ensamblarDominio(pedidoEnsamblar.getMesa()))
-				.cliente(ClienteDTOAssembler.getInstance().ensamblarDominio(pedidoEnsamblar.getCliente()))
-				.empleado(EmpleadoDTOAssembler.getInstance().ensamblarDominio(pedidoEnsamblar.getEmpleado()))
-				.detalles(ensamblarDetallesDominio(pedidoEnsamblar))
-				.build();
-	}
+        var detalles = UtilObjeto.obtenerValorDefecto(
+                detallesDominio,
+                List.<DetallePedidoDominio>of());
 
-	private List<co.edu.uco.patiomaruparking.dto.DetallePedidoDTO> ensamblarDetallesDTO(
-			final PedidoDominio dominio) {
+        return detalles.stream()
+                .map(DetallePedidoDTOAssembler.getInstance()::ensamblarDTO)
+                .toList();
+    }
 
-		if (dominio.getDetalles() == null) {
-			return List.of();
-		}
+    private List<DetallePedidoDominio> ensamblarDetallesDominio(
+            final List<DetallePedidoDTO> detallesDTO) {
 
-		return dominio.getDetalles()
-				.stream()
-				.map(DetallePedidoDTOAssembler.getInstance()::ensamblarDTO)
-				.collect(Collectors.toList());
-	}
+        var detalles = UtilObjeto.obtenerValorDefecto(
+                detallesDTO,
+                List.<DetallePedidoDTO>of());
 
-	private List<co.edu.uco.patiomaruparking.negocio.dominio.DetallePedidoDominio> ensamblarDetallesDominio(
-			final PedidoDTO dto) {
-
-		if (dto.getDetalles() == null) {
-			return List.of();
-		}
-
-		return dto.getDetalles()
-				.stream()
-				.map(DetallePedidoDTOAssembler.getInstance()::ensamblarDominio)
-				.collect(Collectors.toList());
-	}
+        return detalles.stream()
+                .map(DetallePedidoDTOAssembler.getInstance()::ensamblarDominio)
+                .toList();
+    }
 }

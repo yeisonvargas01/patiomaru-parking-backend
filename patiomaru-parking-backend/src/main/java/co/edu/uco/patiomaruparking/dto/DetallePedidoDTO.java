@@ -2,109 +2,119 @@ package co.edu.uco.patiomaruparking.dto;
 
 import java.math.BigDecimal;
 
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+
 public class DetallePedidoDTO {
 
-	private String codigoDetallePedido;
-	private Integer cantidad;
-	private BigDecimal subtotal;
-	private String codigoPedido;
-	private PlatoDTO plato;
+    private static final Integer CANTIDAD_DEFECTO = 0;
+    private static final BigDecimal SUBTOTAL_DEFECTO = BigDecimal.ZERO;
 
-	private DetallePedidoDTO(final Builder builder) {
-		setCodigoDetallePedido(builder.codigoDetallePedido);
-		setCantidad(builder.cantidad);
-		setSubtotal(builder.subtotal);
-		setCodigoPedido(builder.codigoPedido);
-		setPlato(builder.plato);
-	}
+    private String codigoDetallePedido = UtilTexto.TEXTO_VACIO;
+    private Integer cantidad = CANTIDAD_DEFECTO;
+    private BigDecimal subtotal = SUBTOTAL_DEFECTO;
+    private String codigoPedido = UtilTexto.TEXTO_VACIO;
+    private PlatoDTO plato = PlatoDTO.builder().build();
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    public DetallePedidoDTO() {
+        super();
+    }
 
-	public String getCodigoDetallePedido() {
-		return codigoDetallePedido;
-	}
+    private DetallePedidoDTO(final Builder builder) {
+        setCodigoDetallePedido(builder.codigoDetallePedido);
+        setCantidad(builder.cantidad);
+        setSubtotal(builder.subtotal);
+        setCodigoPedido(builder.codigoPedido);
+        setPlato(builder.plato);
+    }
 
-	private void setCodigoDetallePedido(final String codigoDetallePedido) {
-		this.codigoDetallePedido = aplicarTrim(codigoDetallePedido);
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	public Integer getCantidad() {
-		return cantidad;
-	}
+    public String getCodigoDetallePedido() {
+        return codigoDetallePedido;
+    }
 
-	private void setCantidad(final Integer cantidad) {
-		this.cantidad = cantidad;
-	}
+    public void setCodigoDetallePedido(final String codigoDetallePedido) {
+        this.codigoDetallePedido = UtilTexto.aplicarTrim(codigoDetallePedido);
+    }
 
-	public BigDecimal getSubtotal() {
-		return subtotal;
-	}
+    public Integer getCantidad() {
+        return cantidad;
+    }
 
-	private void setSubtotal(final BigDecimal subtotal) {
-		this.subtotal = subtotal;
-	}
+    public void setCantidad(final Integer cantidad) {
+        this.cantidad = UtilObjeto.obtenerValorDefecto(cantidad, CANTIDAD_DEFECTO);
+    }
 
-	public String getCodigoPedido() {
-		return codigoPedido;
-	}
+    public BigDecimal getSubtotal() {
+        return subtotal;
+    }
 
-	private void setCodigoPedido(final String codigoPedido) {
-		this.codigoPedido = aplicarTrim(codigoPedido);
-	}
+    public void setSubtotal(final BigDecimal subtotal) {
+        this.subtotal = UtilObjeto.obtenerValorDefecto(subtotal, SUBTOTAL_DEFECTO);
+    }
 
-	public PlatoDTO getPlato() {
-		return plato;
-	}
+    public String getCodigoPedido() {
+        return codigoPedido;
+    }
 
-	private void setPlato(final PlatoDTO plato) {
-		this.plato = plato;
-	}
+    public void setCodigoPedido(final String codigoPedido) {
+        this.codigoPedido = UtilTexto.aplicarTrim(codigoPedido);
+    }
 
-	public static class Builder {
+    public PlatoDTO getPlato() {
+        return plato;
+    }
 
-		private String codigoDetallePedido;
-		private Integer cantidad;
-		private BigDecimal subtotal;
-		private String codigoPedido;
-		private PlatoDTO plato;
+    public void setPlato(final PlatoDTO plato) {
+        this.plato = UtilObjeto.obtenerValorDefecto(
+                plato,
+                PlatoDTO.builder().build());
+    }
 
-		private Builder() {
-			super();
-		}
+    public static class Builder {
 
-		public Builder codigoDetallePedido(final String codigoDetallePedido) {
-			this.codigoDetallePedido = aplicarTrim(codigoDetallePedido);
-			return this;
-		}
+        private String codigoDetallePedido = UtilTexto.TEXTO_VACIO;
+        private Integer cantidad = CANTIDAD_DEFECTO;
+        private BigDecimal subtotal = SUBTOTAL_DEFECTO;
+        private String codigoPedido = UtilTexto.TEXTO_VACIO;
+        private PlatoDTO plato = PlatoDTO.builder().build();
 
-		public Builder cantidad(final Integer cantidad) {
-			this.cantidad = cantidad;
-			return this;
-		}
+        private Builder() {
+            super();
+        }
 
-		public Builder subtotal(final BigDecimal subtotal) {
-			this.subtotal = subtotal;
-			return this;
-		}
+        public Builder codigoDetallePedido(final String codigoDetallePedido) {
+            this.codigoDetallePedido = UtilTexto.aplicarTrim(codigoDetallePedido);
+            return this;
+        }
 
-		public Builder codigoPedido(final String codigoPedido) {
-			this.codigoPedido = aplicarTrim(codigoPedido);
-			return this;
-		}
+        public Builder cantidad(final Integer cantidad) {
+            this.cantidad = UtilObjeto.obtenerValorDefecto(cantidad, CANTIDAD_DEFECTO);
+            return this;
+        }
 
-		public Builder plato(final PlatoDTO plato) {
-			this.plato = plato;
-			return this;
-		}
+        public Builder subtotal(final BigDecimal subtotal) {
+            this.subtotal = UtilObjeto.obtenerValorDefecto(subtotal, SUBTOTAL_DEFECTO);
+            return this;
+        }
 
-		public DetallePedidoDTO build() {
-			return new DetallePedidoDTO(this);
-		}
-	}
+        public Builder codigoPedido(final String codigoPedido) {
+            this.codigoPedido = UtilTexto.aplicarTrim(codigoPedido);
+            return this;
+        }
 
-	private static String aplicarTrim(final String valor) {
-		return valor == null ? "" : valor.trim();
-	}
+        public Builder plato(final PlatoDTO plato) {
+            this.plato = UtilObjeto.obtenerValorDefecto(
+                    plato,
+                    PlatoDTO.builder().build());
+            return this;
+        }
+
+        public DetallePedidoDTO build() {
+            return new DetallePedidoDTO(this);
+        }
+    }
 }

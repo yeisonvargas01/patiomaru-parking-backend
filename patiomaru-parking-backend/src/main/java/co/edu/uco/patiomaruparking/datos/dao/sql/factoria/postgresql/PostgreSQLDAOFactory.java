@@ -9,92 +9,122 @@ import co.edu.uco.patiomaruparking.datos.dao.MesaDAO;
 import co.edu.uco.patiomaruparking.datos.dao.PedidoDAO;
 import co.edu.uco.patiomaruparking.datos.dao.PlatoDAO;
 import co.edu.uco.patiomaruparking.datos.dao.sql.factoria.DAOFactory;
+import co.edu.uco.patiomaruparking.datos.dao.sql.postgresql.ClientePostgreSQLDAO;
+import co.edu.uco.patiomaruparking.datos.dao.sql.postgresql.DetallePedidoPostgreSQLDAO;
+import co.edu.uco.patiomaruparking.datos.dao.sql.postgresql.EmpleadoPostgreSQLDAO;
+import co.edu.uco.patiomaruparking.datos.dao.sql.postgresql.MesaPostgreSQLDAO;
+import co.edu.uco.patiomaruparking.datos.dao.sql.postgresql.PedidoPostgreSQLDAO;
+import co.edu.uco.patiomaruparking.datos.dao.sql.postgresql.PlatoPostgreSQLDAO;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
 
 public final class PostgreSQLDAOFactory extends DAOFactory {
 
-	public PostgreSQLDAOFactory() {
-		abrirConexion();
-	}
+    public PostgreSQLDAOFactory() {
+        abrirConexion();
+    }
 
-	@Override
-	public void abrirConexion() {
-		if (conexion == null) {
-			conexion = PostgreSQLConexion.obtenerConexion();
-		}
-	}
+    @Override
+    public void abrirConexion() {
+        try {
+            if (UtilObjeto.esNulo(conexion) || conexion.isClosed()) {
+                conexion = PostgreSQLConexion.obtenerConexion();
+            }
 
-	@Override
-	public void cerrarConexion() {
-		try {
-			if (conexion != null && !conexion.isClosed()) {
-				conexion.close();
-			}
-		} catch (SQLException excepcion) {
-			throw new RuntimeException("No fue posible cerrar la conexión con PostgreSQL.", excepcion);
-		}
-	}
+        } catch (SQLException excepcion) {
+            throw new RuntimeException(
+                    "No fue posible validar la conexión con PostgreSQL.",
+                    excepcion);
+        }
+    }
 
-	@Override
-	public void iniciarTransaccion() {
-		try {
-			if (conexion != null && !conexion.isClosed()) {
-				conexion.setAutoCommit(false);
-			}
-		} catch (SQLException excepcion) {
-			throw new RuntimeException("No fue posible iniciar la transacción en PostgreSQL.", excepcion);
-		}
-	}
+    @Override
+    public void cerrarConexion() {
+        try {
+            if (UtilObjeto.noEsNulo(conexion) && !conexion.isClosed()) {
+                conexion.close();
+            }
 
-	@Override
-	public void confirmarTransaccion() {
-		try {
-			if (conexion != null && !conexion.isClosed()) {
-				conexion.commit();
-			}
-		} catch (SQLException excepcion) {
-			throw new RuntimeException("No fue posible confirmar la transacción en PostgreSQL.", excepcion);
-		}
-	}
+        } catch (SQLException excepcion) {
+            throw new RuntimeException(
+                    "No fue posible cerrar la conexión con PostgreSQL.",
+                    excepcion);
+        }
+    }
 
-	@Override
-	public void cancelarTransaccion() {
-		try {
-			if (conexion != null && !conexion.isClosed()) {
-				conexion.rollback();
-			}
-		} catch (SQLException excepcion) {
-			throw new RuntimeException("No fue posible cancelar la transacción en PostgreSQL.", excepcion);
-		}
-	}
+    @Override
+    public void iniciarTransaccion() {
+        try {
+            abrirConexion();
+            conexion.setAutoCommit(false);
 
-	@Override
-	public ClienteDAO obtenerClienteDAO() {
-		return null;
-	}
+        } catch (SQLException excepcion) {
+            throw new RuntimeException(
+                    "No fue posible iniciar la transacción en PostgreSQL.",
+                    excepcion);
+        }
+    }
 
-	@Override
-	public EmpleadoDAO obtenerEmpleadoDAO() {
-		return null;
-	}
+    @Override
+    public void confirmarTransaccion() {
+        try {
+            abrirConexion();
+            conexion.commit();
+            conexion.setAutoCommit(true);
 
-	@Override
-	public MesaDAO obtenerMesaDAO() {
-		return null;
-	}
+        } catch (SQLException excepcion) {
+            throw new RuntimeException(
+                    "No fue posible confirmar la transacción en PostgreSQL.",
+                    excepcion);
+        }
+    }
 
-	@Override
-	public PedidoDAO obtenerPedidoDAO() {
-		return null;
-	}
+    @Override
+    public void cancelarTransaccion() {
+        try {
+            abrirConexion();
+            conexion.rollback();
+            conexion.setAutoCommit(true);
 
-	@Override
-	public DetallePedidoDAO obtenerDetallePedidoDAO() {
-		return null;
-	}
+        } catch (SQLException excepcion) {
+            throw new RuntimeException(
+                    "No fue posible cancelar la transacción en PostgreSQL.",
+                    excepcion);
+        }
+    }
 
-	@Override
-	public PlatoDAO obtenerPlatoDAO() {
-		return null;
-	}
+    @Override
+    public ClienteDAO obtenerClienteDAO() {
+        abrirConexion();
+        return new ClientePostgreSQLDAO(conexion);
+    }
 
+    @Override
+    public EmpleadoDAO obtenerEmpleadoDAO() {
+        abrirConexion();
+        return new EmpleadoPostgreSQLDAO(conexion);
+    }
+
+    @Override
+    public MesaDAO obtenerMesaDAO() {
+        abrirConexion();
+        return new MesaPostgreSQLDAO(conexion);
+    }
+
+    @Override
+    public PedidoDAO obtenerPedidoDAO() {
+        abrirConexion();
+        return new PedidoPostgreSQLDAO(conexion);
+    }
+
+    @Override
+    public DetallePedidoDAO obtenerDetallePedidoDAO() {
+        abrirConexion();
+        return new DetallePedidoPostgreSQLDAO(conexion);
+    }
+
+    @Override
+    public PlatoDAO obtenerPlatoDAO() {
+        abrirConexion();
+        return new PlatoPostgreSQLDAO(conexion);
+    }
 }

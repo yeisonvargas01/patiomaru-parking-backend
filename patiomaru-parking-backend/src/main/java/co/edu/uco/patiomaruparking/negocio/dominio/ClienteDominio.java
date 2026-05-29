@@ -1,112 +1,133 @@
 package co.edu.uco.patiomaruparking.negocio.dominio;
 
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+
 public class ClienteDominio {
 
-	private String codigoCliente;
-	private String nombre;
-	private String telefono;
-	private String correoElectronico;
-	private Boolean estado;
+    private static final Boolean ESTADO_DEFECTO = Boolean.TRUE;
 
-	private ClienteDominio(final Builder builder) {
-		setCodigoCliente(builder.codigoCliente);
-		setNombre(builder.nombre);
-		setTelefono(builder.telefono);
-		setCorreoElectronico(builder.correoElectronico);
-		setEstado(builder.estado);
-	}
+    private String codigoCliente = UtilTexto.TEXTO_VACIO;
+    private String nombre = UtilTexto.TEXTO_VACIO;
+    private String telefono = UtilTexto.TEXTO_VACIO;
+    private String correoElectronico = UtilTexto.TEXTO_VACIO;
+    private Boolean estado = ESTADO_DEFECTO;
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    private ClienteDominio(final Builder builder) {
+        setCodigoCliente(builder.codigoCliente);
+        setNombre(builder.nombre);
+        setTelefono(builder.telefono);
+        setCorreoElectronico(builder.correoElectronico);
+        setEstado(builder.estado);
+    }
 
-	public String getCodigoCliente() {
-		return codigoCliente;
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	private void setCodigoCliente(final String codigoCliente) {
-		this.codigoCliente = aplicarTrim(codigoCliente);
-	}
+    public String getCodigoCliente() {
+        return codigoCliente;
+    }
 
-	public String getNombre() {
-		return nombre;
-	}
+    private void setCodigoCliente(final String codigoCliente) {
+        this.codigoCliente = UtilTexto.aplicarTrim(codigoCliente);
+    }
 
-	private void setNombre(final String nombre) {
-		this.nombre = aplicarTrim(nombre);
-	}
+    public String getNombre() {
+        return nombre;
+    }
 
-	public String getTelefono() {
-		return telefono;
-	}
+    private void setNombre(final String nombre) {
+        this.nombre = UtilTexto.aplicarTrim(nombre);
+    }
 
-	private void setTelefono(final String telefono) {
-		this.telefono = aplicarTrim(telefono);
-	}
+    public String getTelefono() {
+        return telefono;
+    }
 
-	public String getCorreoElectronico() {
-		return correoElectronico;
-	}
+    private void setTelefono(final String telefono) {
+        this.telefono = UtilTexto.aplicarTrim(telefono);
+    }
 
-	private void setCorreoElectronico(final String correoElectronico) {
-		this.correoElectronico = aplicarTrim(correoElectronico);
-	}
+    public String getCorreoElectronico() {
+        return correoElectronico;
+    }
 
-	public Boolean getEstado() {
-		return estado;
-	}
+    private void setCorreoElectronico(final String correoElectronico) {
+        this.correoElectronico = UtilTexto.aplicarTrim(correoElectronico);
+    }
 
-	private void setEstado(final Boolean estado) {
-		this.estado = estado;
-	}
+    public Boolean getEstado() {
+        return estado;
+    }
 
-	public boolean estaActivo() {
-		return Boolean.TRUE.equals(estado);
-	}
+    private void setEstado(final Boolean estado) {
+        this.estado = UtilObjeto.obtenerValorDefecto(
+                estado,
+                ESTADO_DEFECTO);
+    }
 
-	public static class Builder {
+    public boolean tieneCodigo() {
+        return UtilTexto.tieneTexto(codigoCliente);
+    }
 
-		private String codigoCliente;
-		private String nombre;
-		private String telefono;
-		private String correoElectronico;
-		private Boolean estado;
+    public boolean tieneNombre() {
+        return UtilTexto.tieneTexto(nombre);
+    }
 
-		private Builder() {
-			super();
-		}
+    public boolean tieneTelefono() {
+        return UtilTexto.tieneTexto(telefono);
+    }
 
-		public Builder codigoCliente(final String codigoCliente) {
-			this.codigoCliente = aplicarTrim(codigoCliente);
-			return this;
-		}
+    public boolean tieneCorreoElectronico() {
+        return UtilTexto.tieneTexto(correoElectronico);
+    }
 
-		public Builder nombre(final String nombre) {
-			this.nombre = aplicarTrim(nombre);
-			return this;
-		}
+    public boolean estaActivo() {
+        return Boolean.TRUE.equals(estado);
+    }
 
-		public Builder telefono(final String telefono) {
-			this.telefono = aplicarTrim(telefono);
-			return this;
-		}
+    public static class Builder {
 
-		public Builder correoElectronico(final String correoElectronico) {
-			this.correoElectronico = aplicarTrim(correoElectronico);
-			return this;
-		}
+        private String codigoCliente = UtilTexto.TEXTO_VACIO;
+        private String nombre = UtilTexto.TEXTO_VACIO;
+        private String telefono = UtilTexto.TEXTO_VACIO;
+        private String correoElectronico = UtilTexto.TEXTO_VACIO;
+        private Boolean estado = ESTADO_DEFECTO;
 
-		public Builder estado(final Boolean estado) {
-			this.estado = estado;
-			return this;
-		}
+        private Builder() {
+            super();
+        }
 
-		public ClienteDominio build() {
-			return new ClienteDominio(this);
-		}
-	}
+        public Builder codigoCliente(final String codigoCliente) {
+            this.codigoCliente = UtilTexto.aplicarTrim(codigoCliente);
+            return this;
+        }
 
-	private static String aplicarTrim(final String valor) {
-		return valor == null ? "" : valor.trim();
-	}
+        public Builder nombre(final String nombre) {
+            this.nombre = UtilTexto.aplicarTrim(nombre);
+            return this;
+        }
+
+        public Builder telefono(final String telefono) {
+            this.telefono = UtilTexto.aplicarTrim(telefono);
+            return this;
+        }
+
+        public Builder correoElectronico(final String correoElectronico) {
+            this.correoElectronico = UtilTexto.aplicarTrim(correoElectronico);
+            return this;
+        }
+
+        public Builder estado(final Boolean estado) {
+            this.estado = UtilObjeto.obtenerValorDefecto(
+                    estado,
+                    ESTADO_DEFECTO);
+            return this;
+        }
+
+        public ClienteDominio build() {
+            return new ClienteDominio(this);
+        }
+    }
 }

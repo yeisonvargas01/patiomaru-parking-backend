@@ -1,108 +1,113 @@
 package co.edu.uco.patiomaruparking.dto;
 
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+
 public class ClienteDTO {
 
-	private String codigoCliente;
-	private String nombre;
-	private String telefono;
-	private String correoElectronico;
-	private Boolean estado;
+    private static final Boolean ESTADO_DEFECTO = Boolean.TRUE;
 
-	private ClienteDTO(final Builder builder) {
-		setCodigoCliente(builder.codigoCliente);
-		setNombre(builder.nombre);
-		setTelefono(builder.telefono);
-		setCorreoElectronico(builder.correoElectronico);
-		setEstado(builder.estado);
-	}
+    private String codigoCliente = UtilTexto.TEXTO_VACIO;
+    private String nombre = UtilTexto.TEXTO_VACIO;
+    private String telefono = UtilTexto.TEXTO_VACIO;
+    private String correoElectronico = UtilTexto.TEXTO_VACIO;
+    private Boolean estado = ESTADO_DEFECTO;
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    public ClienteDTO() {
+        super();
+    }
 
-	public String getCodigoCliente() {
-		return codigoCliente;
-	}
+    private ClienteDTO(final Builder builder) {
+        setCodigoCliente(builder.codigoCliente);
+        setNombre(builder.nombre);
+        setTelefono(builder.telefono);
+        setCorreoElectronico(builder.correoElectronico);
+        setEstado(builder.estado);
+    }
 
-	private void setCodigoCliente(final String codigoCliente) {
-		this.codigoCliente = aplicarTrim(codigoCliente);
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	public String getNombre() {
-		return nombre;
-	}
+    public String getCodigoCliente() {
+        return codigoCliente;
+    }
 
-	private void setNombre(final String nombre) {
-		this.nombre = aplicarTrim(nombre);
-	}
+    public void setCodigoCliente(final String codigoCliente) {
+        this.codigoCliente = UtilTexto.aplicarTrim(codigoCliente);
+    }
 
-	public String getTelefono() {
-		return telefono;
-	}
+    public String getNombre() {
+        return nombre;
+    }
 
-	private void setTelefono(final String telefono) {
-		this.telefono = aplicarTrim(telefono);
-	}
+    public void setNombre(final String nombre) {
+        this.nombre = UtilTexto.aplicarTrim(nombre);
+    }
 
-	public String getCorreoElectronico() {
-		return correoElectronico;
-	}
+    public String getTelefono() {
+        return telefono;
+    }
 
-	private void setCorreoElectronico(final String correoElectronico) {
-		this.correoElectronico = aplicarTrim(correoElectronico);
-	}
+    public void setTelefono(final String telefono) {
+        this.telefono = UtilTexto.aplicarTrim(telefono);
+    }
 
-	public Boolean getEstado() {
-		return estado;
-	}
+    public String getCorreoElectronico() {
+        return correoElectronico;
+    }
 
-	private void setEstado(final Boolean estado) {
-		this.estado = estado;
-	}
+    public void setCorreoElectronico(final String correoElectronico) {
+        this.correoElectronico = UtilTexto.aplicarTrim(correoElectronico);
+    }
 
-	public static class Builder {
+    public Boolean getEstado() {
+        return estado;
+    }
 
-		private String codigoCliente;
-		private String nombre;
-		private String telefono;
-		private String correoElectronico;
-		private Boolean estado;
+    public void setEstado(final Boolean estado) {
+        this.estado = UtilObjeto.obtenerValorDefecto(estado, ESTADO_DEFECTO);
+    }
 
-		private Builder() {
-			super();
-		}
+    public static class Builder {
 
-		public Builder codigoCliente(final String codigoCliente) {
-			this.codigoCliente = aplicarTrim(codigoCliente);
-			return this;
-		}
+        private String codigoCliente = UtilTexto.TEXTO_VACIO;
+        private String nombre = UtilTexto.TEXTO_VACIO;
+        private String telefono = UtilTexto.TEXTO_VACIO;
+        private String correoElectronico = UtilTexto.TEXTO_VACIO;
+        private Boolean estado = ESTADO_DEFECTO;
 
-		public Builder nombre(final String nombre) {
-			this.nombre = aplicarTrim(nombre);
-			return this;
-		}
+        private Builder() {
+            super();
+        }
 
-		public Builder telefono(final String telefono) {
-			this.telefono = aplicarTrim(telefono);
-			return this;
-		}
+        public Builder codigoCliente(final String codigoCliente) {
+            this.codigoCliente = UtilTexto.aplicarTrim(codigoCliente);
+            return this;
+        }
 
-		public Builder correoElectronico(final String correoElectronico) {
-			this.correoElectronico = aplicarTrim(correoElectronico);
-			return this;
-		}
+        public Builder nombre(final String nombre) {
+            this.nombre = UtilTexto.aplicarTrim(nombre);
+            return this;
+        }
 
-		public Builder estado(final Boolean estado) {
-			this.estado = estado;
-			return this;
-		}
+        public Builder telefono(final String telefono) {
+            this.telefono = UtilTexto.aplicarTrim(telefono);
+            return this;
+        }
 
-		public ClienteDTO build() {
-			return new ClienteDTO(this);
-		}
-	}
+        public Builder correoElectronico(final String correoElectronico) {
+            this.correoElectronico = UtilTexto.aplicarTrim(correoElectronico);
+            return this;
+        }
 
-	private static String aplicarTrim(final String valor) {
-		return valor == null ? "" : valor.trim();
-	}
+        public Builder estado(final Boolean estado) {
+            this.estado = UtilObjeto.obtenerValorDefecto(estado, ESTADO_DEFECTO);
+            return this;
+        }
+
+        public ClienteDTO build() {
+            return new ClienteDTO(this);
+        }
+    }
 }

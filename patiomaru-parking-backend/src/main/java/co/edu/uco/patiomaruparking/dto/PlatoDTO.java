@@ -2,109 +2,127 @@ package co.edu.uco.patiomaruparking.dto;
 
 import java.math.BigDecimal;
 
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+
 public class PlatoDTO {
 
-	private String codigoPlato;
-	private String nombre;
-	private CategoriaDTO categoria;
-	private BigDecimal precioVenta;
-	private Boolean estado;
+    private static final BigDecimal PRECIO_VENTA_DEFECTO = BigDecimal.ZERO;
+    private static final Boolean ESTADO_DEFECTO = Boolean.TRUE;
 
-	private PlatoDTO(final Builder builder) {
-		setCodigoPlato(builder.codigoPlato);
-		setNombre(builder.nombre);
-		setCategoria(builder.categoria);
-		setPrecioVenta(builder.precioVenta);
-		setEstado(builder.estado);
-	}
+    private String codigoPlato = UtilTexto.TEXTO_VACIO;
+    private String nombre = UtilTexto.TEXTO_VACIO;
+    private CategoriaDTO categoria = CategoriaDTO.builder().build();
+    private BigDecimal precioVenta = PRECIO_VENTA_DEFECTO;
+    private Boolean estado = ESTADO_DEFECTO;
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    public PlatoDTO() {
+        super();
+    }
 
-	public String getCodigoPlato() {
-		return codigoPlato;
-	}
+    private PlatoDTO(final Builder builder) {
+        setCodigoPlato(builder.codigoPlato);
+        setNombre(builder.nombre);
+        setCategoria(builder.categoria);
+        setPrecioVenta(builder.precioVenta);
+        setEstado(builder.estado);
+    }
 
-	private void setCodigoPlato(final String codigoPlato) {
-		this.codigoPlato = aplicarTrim(codigoPlato);
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	public String getNombre() {
-		return nombre;
-	}
+    public String getCodigoPlato() {
+        return codigoPlato;
+    }
 
-	private void setNombre(final String nombre) {
-		this.nombre = aplicarTrim(nombre);
-	}
+    public void setCodigoPlato(final String codigoPlato) {
+        this.codigoPlato = UtilTexto.aplicarTrim(codigoPlato);
+    }
 
-	public CategoriaDTO getCategoria() {
-		return categoria;
-	}
+    public String getNombre() {
+        return nombre;
+    }
 
-	private void setCategoria(final CategoriaDTO categoria) {
-		this.categoria = categoria == null ? CategoriaDTO.builder().build() : categoria;
-	}
+    public void setNombre(final String nombre) {
+        this.nombre = UtilTexto.aplicarTrim(nombre);
+    }
 
-	public BigDecimal getPrecioVenta() {
-		return precioVenta;
-	}
+    public CategoriaDTO getCategoria() {
+        return categoria;
+    }
 
-	private void setPrecioVenta(final BigDecimal precioVenta) {
-		this.precioVenta = precioVenta;
-	}
+    public void setCategoria(final CategoriaDTO categoria) {
+        this.categoria = UtilObjeto.obtenerValorDefecto(
+                categoria,
+                CategoriaDTO.builder().build());
+    }
 
-	public Boolean getEstado() {
-		return estado;
-	}
+    public BigDecimal getPrecioVenta() {
+        return precioVenta;
+    }
 
-	private void setEstado(final Boolean estado) {
-		this.estado = estado;
-	}
+    public void setPrecioVenta(final BigDecimal precioVenta) {
+        this.precioVenta = UtilObjeto.obtenerValorDefecto(
+                precioVenta,
+                PRECIO_VENTA_DEFECTO);
+    }
 
-	public static class Builder {
+    public Boolean getEstado() {
+        return estado;
+    }
 
-		private String codigoPlato;
-		private String nombre;
-		private CategoriaDTO categoria;
-		private BigDecimal precioVenta;
-		private Boolean estado;
+    public void setEstado(final Boolean estado) {
+        this.estado = UtilObjeto.obtenerValorDefecto(
+                estado,
+                ESTADO_DEFECTO);
+    }
 
-		private Builder() {
-			super();
-		}
+    public static class Builder {
 
-		public Builder codigoPlato(final String codigoPlato) {
-			this.codigoPlato = aplicarTrim(codigoPlato);
-			return this;
-		}
+        private String codigoPlato = UtilTexto.TEXTO_VACIO;
+        private String nombre = UtilTexto.TEXTO_VACIO;
+        private CategoriaDTO categoria = CategoriaDTO.builder().build();
+        private BigDecimal precioVenta = PRECIO_VENTA_DEFECTO;
+        private Boolean estado = ESTADO_DEFECTO;
 
-		public Builder nombre(final String nombre) {
-			this.nombre = aplicarTrim(nombre);
-			return this;
-		}
+        private Builder() {
+            super();
+        }
 
-		public Builder categoria(final CategoriaDTO categoria) {
-			this.categoria = categoria == null ? CategoriaDTO.builder().build() : categoria;
-			return this;
-		}
+        public Builder codigoPlato(final String codigoPlato) {
+            this.codigoPlato = UtilTexto.aplicarTrim(codigoPlato);
+            return this;
+        }
 
-		public Builder precioVenta(final BigDecimal precioVenta) {
-			this.precioVenta = precioVenta;
-			return this;
-		}
+        public Builder nombre(final String nombre) {
+            this.nombre = UtilTexto.aplicarTrim(nombre);
+            return this;
+        }
 
-		public Builder estado(final Boolean estado) {
-			this.estado = estado;
-			return this;
-		}
+        public Builder categoria(final CategoriaDTO categoria) {
+            this.categoria = UtilObjeto.obtenerValorDefecto(
+                    categoria,
+                    CategoriaDTO.builder().build());
+            return this;
+        }
 
-		public PlatoDTO build() {
-			return new PlatoDTO(this);
-		}
-	}
+        public Builder precioVenta(final BigDecimal precioVenta) {
+            this.precioVenta = UtilObjeto.obtenerValorDefecto(
+                    precioVenta,
+                    PRECIO_VENTA_DEFECTO);
+            return this;
+        }
 
-	private static String aplicarTrim(final String valor) {
-		return valor == null ? "" : valor.trim();
-	}
+        public Builder estado(final Boolean estado) {
+            this.estado = UtilObjeto.obtenerValorDefecto(
+                    estado,
+                    ESTADO_DEFECTO);
+            return this;
+        }
+
+        public PlatoDTO build() {
+            return new PlatoDTO(this);
+        }
+    }
 }

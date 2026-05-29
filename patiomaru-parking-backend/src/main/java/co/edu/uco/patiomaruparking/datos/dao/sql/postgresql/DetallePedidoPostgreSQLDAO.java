@@ -6,226 +6,242 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import co.edu.uco.patiomaruparking.datos.dao.DetallePedidoDAO;
 import co.edu.uco.patiomaruparking.datos.dao.sql.SQLDAO;
 import co.edu.uco.patiomaruparking.entidad.CategoriaEntidad;
 import co.edu.uco.patiomaruparking.entidad.DetallePedidoEntidad;
 import co.edu.uco.patiomaruparking.entidad.PlatoEntidad;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
 
 public class DetallePedidoPostgreSQLDAO extends SQLDAO implements DetallePedidoDAO {
 
-	public DetallePedidoPostgreSQLDAO(final Connection conexion) {
-		super(conexion);
-	}
+    private static final int CANTIDAD_DEFECTO = 0;
 
-	@Override
-	public void registrar(final DetallePedidoEntidad entidad) {
-		final String sentenciaSql = """
-				INSERT INTO detalle_pedido (
-					codigo_detalle_pedido,
-					cantidad,
-					subtotal,
-					codigo_pedido,
-					codigo_plato
-				) VALUES (?, ?, ?, ?, ?)
-				""";
+    public DetallePedidoPostgreSQLDAO(final Connection conexion) {
+        super(conexion);
+    }
 
-		try (PreparedStatement sentencia = getConexion().prepareStatement(sentenciaSql)) {
-			sentencia.setString(1, entidad.getCodigoDetallePedido());
-			sentencia.setObject(2, entidad.getCantidad());
-			sentencia.setBigDecimal(3, entidad.getSubtotal());
-			sentencia.setString(4, entidad.getCodigoPedido());
-			sentencia.setString(5, entidad.getPlato().getCodigoPlato());
+    @Override
+    public void registrar(final DetallePedidoEntidad entidad) {
+        final String sentenciaSql = """
+                INSERT INTO detalle_pedido (
+                    codigo_detalle_pedido,
+                    cantidad,
+                    subtotal,
+                    codigo_pedido,
+                    codigo_plato
+                ) VALUES (?, ?, ?, ?, ?)
+                """;
 
-			sentencia.executeUpdate();
+        var detalle = UtilObjeto.obtenerValorDefecto(
+                entidad,
+                DetallePedidoEntidad.builder().build());
 
-		} catch (SQLException excepcion) {
-			throw new RuntimeException("No fue posible registrar la información del detalle del pedido.", excepcion);
-		}
-	}
+        try (PreparedStatement sentencia = getConexion().prepareStatement(sentenciaSql)) {
+            sentencia.setString(1, detalle.getCodigoDetallePedido());
+            sentencia.setInt(2, detalle.getCantidad());
+            sentencia.setBigDecimal(3, detalle.getSubtotal());
+            sentencia.setString(4, detalle.getCodigoPedido());
+            sentencia.setString(5, detalle.getPlato().getCodigoPlato());
 
-	@Override
-	public List<DetallePedidoEntidad> consultar() {
-		return consultar(DetallePedidoEntidad.builder().build());
-	}
+            sentencia.executeUpdate();
 
-	@Override
-	public DetallePedidoEntidad consultarPorId(final String codigoDetallePedido) {
-		final String sentenciaSql = """
-				SELECT
-					dp.codigo_detalle_pedido,
-					dp.cantidad,
-					dp.subtotal,
-					dp.codigo_pedido,
+        } catch (SQLException excepcion) {
+            throw new RuntimeException(
+                    "No fue posible registrar la información del detalle del pedido.",
+                    excepcion);
+        }
+    }
 
-					p.codigo_plato,
-					p.nombre AS nombre_plato,
-					p.codigo_categoria,
-					c.nombre AS nombre_categoria,
-					p.precio_venta,
-					p.estado AS estado_plato
+    @Override
+    public List<DetallePedidoEntidad> consultar() {
+        return consultar(DetallePedidoEntidad.builder().build());
+    }
 
-				FROM detalle_pedido dp
-				INNER JOIN plato p ON dp.codigo_plato = p.codigo_plato
-				INNER JOIN categoria c ON p.codigo_categoria = c.codigo_categoria
-				WHERE dp.codigo_detalle_pedido = ?
-				""";
+    @Override
+    public DetallePedidoEntidad consultarPorId(final String codigoDetallePedido) {
+        final String sentenciaSql = """
+                SELECT
+                    dp.codigo_detalle_pedido,
+                    dp.cantidad,
+                    dp.subtotal,
+                    dp.codigo_pedido,
 
-		try (PreparedStatement sentencia = getConexion().prepareStatement(sentenciaSql)) {
-			sentencia.setString(1, codigoDetallePedido);
+                    p.codigo_plato,
+                    p.nombre AS nombre_plato,
+                    p.codigo_categoria,
+                    c.nombre AS nombre_categoria,
+                    p.precio_venta,
+                    p.estado AS estado_plato
 
-			try (ResultSet resultado = sentencia.executeQuery()) {
-				if (resultado.next()) {
-					return ensamblarDetallePedido(resultado);
-				}
-			}
+                FROM detalle_pedido dp
+                INNER JOIN plato p ON dp.codigo_plato = p.codigo_plato
+                INNER JOIN categoria c ON p.codigo_categoria = c.codigo_categoria
+                WHERE LOWER(dp.codigo_detalle_pedido) = LOWER(?)
+                """;
 
-			return null;
+        try (PreparedStatement sentencia = getConexion().prepareStatement(sentenciaSql)) {
+            sentencia.setString(1, UtilTexto.aplicarTrim(codigoDetallePedido));
 
-		} catch (SQLException excepcion) {
-			throw new RuntimeException(
-					"No fue posible consultar la información del detalle del pedido por identificador.",
-					excepcion);
-		}
-	}
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                if (resultado.next()) {
+                    return ensamblarDetallePedido(resultado);
+                }
+            }
 
-	@Override
-	public List<DetallePedidoEntidad> consultar(final DetallePedidoEntidad filtro) {
-		var parametros = new ArrayList<Object>();
-		var sentenciaSql = new StringBuilder();
+            return DetallePedidoEntidad.builder().build();
 
-		sentenciaSql.append("SELECT ");
-		sentenciaSql.append("dp.codigo_detalle_pedido, ");
-		sentenciaSql.append("dp.cantidad, ");
-		sentenciaSql.append("dp.subtotal, ");
-		sentenciaSql.append("dp.codigo_pedido, ");
+        } catch (SQLException excepcion) {
+            throw new RuntimeException(
+                    "No fue posible consultar la información del detalle del pedido por identificador.",
+                    excepcion);
+        }
+    }
 
-		sentenciaSql.append("p.codigo_plato, ");
-		sentenciaSql.append("p.nombre AS nombre_plato, ");
-		sentenciaSql.append("p.codigo_categoria, ");
-		sentenciaSql.append("c.nombre AS nombre_categoria, ");
-		sentenciaSql.append("p.precio_venta, ");
-		sentenciaSql.append("p.estado AS estado_plato ");
+    @Override
+    public List<DetallePedidoEntidad> consultar(final DetallePedidoEntidad filtro) {
+        var detalleFiltro = UtilObjeto.obtenerValorDefecto(
+                filtro,
+                DetallePedidoEntidad.builder().build());
 
-		sentenciaSql.append("FROM detalle_pedido dp ");
-		sentenciaSql.append("INNER JOIN plato p ON dp.codigo_plato = p.codigo_plato ");
-		sentenciaSql.append("INNER JOIN categoria c ON p.codigo_categoria = c.codigo_categoria ");
-		sentenciaSql.append("WHERE 1 = 1 ");
+        var parametros = new ArrayList<Object>();
+        var sentenciaSql = new StringBuilder();
 
-		if (Objects.nonNull(filtro)) {
+        sentenciaSql.append("SELECT ");
+        sentenciaSql.append("dp.codigo_detalle_pedido, ");
+        sentenciaSql.append("dp.cantidad, ");
+        sentenciaSql.append("dp.subtotal, ");
+        sentenciaSql.append("dp.codigo_pedido, ");
 
-			if (tieneTexto(filtro.getCodigoDetallePedido())) {
-				sentenciaSql.append("AND LOWER(dp.codigo_detalle_pedido) = LOWER(?) ");
-				parametros.add(filtro.getCodigoDetallePedido());
-			}
+        sentenciaSql.append("p.codigo_plato, ");
+        sentenciaSql.append("p.nombre AS nombre_plato, ");
+        sentenciaSql.append("p.codigo_categoria, ");
+        sentenciaSql.append("c.nombre AS nombre_categoria, ");
+        sentenciaSql.append("p.precio_venta, ");
+        sentenciaSql.append("p.estado AS estado_plato ");
 
-			if (tieneTexto(filtro.getCodigoPedido())) {
-				sentenciaSql.append("AND LOWER(dp.codigo_pedido) = LOWER(?) ");
-				parametros.add(filtro.getCodigoPedido());
-			}
+        sentenciaSql.append("FROM detalle_pedido dp ");
+        sentenciaSql.append("INNER JOIN plato p ON dp.codigo_plato = p.codigo_plato ");
+        sentenciaSql.append("INNER JOIN categoria c ON p.codigo_categoria = c.codigo_categoria ");
+        sentenciaSql.append("WHERE 1 = 1 ");
 
-			if (Objects.nonNull(filtro.getCantidad())) {
-				sentenciaSql.append("AND dp.cantidad = ? ");
-				parametros.add(filtro.getCantidad());
-			}
+        if (UtilTexto.tieneTexto(detalleFiltro.getCodigoDetallePedido())) {
+            sentenciaSql.append("AND LOWER(dp.codigo_detalle_pedido) = LOWER(?) ");
+            parametros.add(detalleFiltro.getCodigoDetallePedido());
+        }
 
-			if (Objects.nonNull(filtro.getPlato()) && tieneTexto(filtro.getPlato().getCodigoPlato())) {
-				sentenciaSql.append("AND LOWER(p.codigo_plato) = LOWER(?) ");
-				parametros.add(filtro.getPlato().getCodigoPlato());
-			}
-		}
+        if (UtilTexto.tieneTexto(detalleFiltro.getCodigoPedido())) {
+            sentenciaSql.append("AND LOWER(dp.codigo_pedido) = LOWER(?) ");
+            parametros.add(detalleFiltro.getCodigoPedido());
+        }
 
-		sentenciaSql.append("ORDER BY dp.codigo_detalle_pedido ASC");
+        if (detalleFiltro.getCantidad() > CANTIDAD_DEFECTO) {
+            sentenciaSql.append("AND dp.cantidad = ? ");
+            parametros.add(detalleFiltro.getCantidad());
+        }
 
-		try (PreparedStatement sentencia = getConexion().prepareStatement(sentenciaSql.toString())) {
+        if (UtilTexto.tieneTexto(detalleFiltro.getPlato().getCodigoPlato())) {
+            sentenciaSql.append("AND LOWER(p.codigo_plato) = LOWER(?) ");
+            parametros.add(detalleFiltro.getPlato().getCodigoPlato());
+        }
 
-			for (int indice = 0; indice < parametros.size(); indice++) {
-				sentencia.setObject(indice + 1, parametros.get(indice));
-			}
+        sentenciaSql.append("ORDER BY dp.codigo_detalle_pedido ASC");
 
-			try (ResultSet resultado = sentencia.executeQuery()) {
-				var detalles = new ArrayList<DetallePedidoEntidad>();
+        try (PreparedStatement sentencia = getConexion().prepareStatement(sentenciaSql.toString())) {
 
-				while (resultado.next()) {
-					detalles.add(ensamblarDetallePedido(resultado));
-				}
+            for (int indice = 0; indice < parametros.size(); indice++) {
+                sentencia.setObject(indice + 1, parametros.get(indice));
+            }
 
-				return detalles;
-			}
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                var detalles = new ArrayList<DetallePedidoEntidad>();
 
-		} catch (SQLException excepcion) {
-			throw new RuntimeException("No fue posible consultar la información de los detalles del pedido.", excepcion);
-		}
-	}
+                while (resultado.next()) {
+                    detalles.add(ensamblarDetallePedido(resultado));
+                }
 
-	@Override
-	public void actualizar(final DetallePedidoEntidad entidad) {
-		final String sentenciaSql = """
-				UPDATE detalle_pedido
-				SET cantidad = ?,
-					subtotal = ?,
-					codigo_pedido = ?,
-					codigo_plato = ?
-				WHERE codigo_detalle_pedido = ?
-				""";
+                return detalles;
+            }
 
-		try (PreparedStatement sentencia = getConexion().prepareStatement(sentenciaSql)) {
-			sentencia.setObject(1, entidad.getCantidad());
-			sentencia.setBigDecimal(2, entidad.getSubtotal());
-			sentencia.setString(3, entidad.getCodigoPedido());
-			sentencia.setString(4, entidad.getPlato().getCodigoPlato());
-			sentencia.setString(5, entidad.getCodigoDetallePedido());
+        } catch (SQLException excepcion) {
+            throw new RuntimeException(
+                    "No fue posible consultar la información de los detalles del pedido.",
+                    excepcion);
+        }
+    }
 
-			sentencia.executeUpdate();
+    @Override
+    public void actualizar(final DetallePedidoEntidad entidad) {
+        final String sentenciaSql = """
+                UPDATE detalle_pedido
+                SET cantidad = ?,
+                    subtotal = ?,
+                    codigo_pedido = ?,
+                    codigo_plato = ?
+                WHERE codigo_detalle_pedido = ?
+                """;
 
-		} catch (SQLException excepcion) {
-			throw new RuntimeException("No fue posible actualizar la información del detalle del pedido.", excepcion);
-		}
-	}
+        var detalle = UtilObjeto.obtenerValorDefecto(
+                entidad,
+                DetallePedidoEntidad.builder().build());
 
-	@Override
-	public void eliminar(final String codigoDetallePedido) {
-		final String sentenciaSql = """
-				DELETE FROM detalle_pedido
-				WHERE codigo_detalle_pedido = ?
-				""";
+        try (PreparedStatement sentencia = getConexion().prepareStatement(sentenciaSql)) {
+            sentencia.setInt(1, detalle.getCantidad());
+            sentencia.setBigDecimal(2, detalle.getSubtotal());
+            sentencia.setString(3, detalle.getCodigoPedido());
+            sentencia.setString(4, detalle.getPlato().getCodigoPlato());
+            sentencia.setString(5, detalle.getCodigoDetallePedido());
 
-		try (PreparedStatement sentencia = getConexion().prepareStatement(sentenciaSql)) {
-			sentencia.setString(1, codigoDetallePedido);
+            sentencia.executeUpdate();
 
-			sentencia.executeUpdate();
+        } catch (SQLException excepcion) {
+            throw new RuntimeException(
+                    "No fue posible actualizar la información del detalle del pedido.",
+                    excepcion);
+        }
+    }
 
-		} catch (SQLException excepcion) {
-			throw new RuntimeException("No fue posible eliminar la información del detalle del pedido.", excepcion);
-		}
-	}
+    @Override
+    public void eliminar(final String codigoDetallePedido) {
+        final String sentenciaSql = """
+                DELETE FROM detalle_pedido
+                WHERE codigo_detalle_pedido = ?
+                """;
 
-	private DetallePedidoEntidad ensamblarDetallePedido(final ResultSet resultado) throws SQLException {
-		var categoria = CategoriaEntidad.builder()
-				.codigoCategoria(resultado.getString("codigo_categoria"))
-				.nombre(resultado.getString("nombre_categoria"))
-				.build();
+        try (PreparedStatement sentencia = getConexion().prepareStatement(sentenciaSql)) {
+            sentencia.setString(1, UtilTexto.aplicarTrim(codigoDetallePedido));
 
-		var plato = PlatoEntidad.builder()
-				.codigoPlato(resultado.getString("codigo_plato"))
-				.nombre(resultado.getString("nombre_plato"))
-				.categoria(categoria)
-				.precioVenta(resultado.getBigDecimal("precio_venta"))
-				.estado(resultado.getObject("estado_plato", Boolean.class))
-				.build();
+            sentencia.executeUpdate();
 
-		return DetallePedidoEntidad.builder()
-				.codigoDetallePedido(resultado.getString("codigo_detalle_pedido"))
-				.cantidad(resultado.getObject("cantidad", Integer.class))
-				.subtotal(resultado.getBigDecimal("subtotal"))
-				.codigoPedido(resultado.getString("codigo_pedido"))
-				.plato(plato)
-				.build();
-	}
+        } catch (SQLException excepcion) {
+            throw new RuntimeException(
+                    "No fue posible eliminar la información del detalle del pedido.",
+                    excepcion);
+        }
+    }
 
-	private boolean tieneTexto(final String texto) {
-		return Objects.nonNull(texto) && !texto.trim().isEmpty();
-	}
+    private DetallePedidoEntidad ensamblarDetallePedido(final ResultSet resultado) throws SQLException {
+        var categoria = CategoriaEntidad.builder()
+                .codigoCategoria(resultado.getString("codigo_categoria"))
+                .nombre(resultado.getString("nombre_categoria"))
+                .build();
+
+        var plato = PlatoEntidad.builder()
+                .codigoPlato(resultado.getString("codigo_plato"))
+                .nombre(resultado.getString("nombre_plato"))
+                .categoria(categoria)
+                .precioVenta(resultado.getBigDecimal("precio_venta"))
+                .estado(resultado.getBoolean("estado_plato"))
+                .build();
+
+        return DetallePedidoEntidad.builder()
+                .codigoDetallePedido(resultado.getString("codigo_detalle_pedido"))
+                .cantidad(resultado.getInt("cantidad"))
+                .subtotal(resultado.getBigDecimal("subtotal"))
+                .codigoPedido(resultado.getString("codigo_pedido"))
+                .plato(plato)
+                .build();
+    }
 }

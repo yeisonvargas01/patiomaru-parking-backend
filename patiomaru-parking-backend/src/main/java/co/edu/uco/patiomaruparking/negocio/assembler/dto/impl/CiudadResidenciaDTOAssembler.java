@@ -3,40 +3,41 @@ package co.edu.uco.patiomaruparking.negocio.assembler.dto.impl;
 import co.edu.uco.patiomaruparking.dto.CiudadResidenciaDTO;
 import co.edu.uco.patiomaruparking.negocio.assembler.dto.DTOAssembler;
 import co.edu.uco.patiomaruparking.negocio.dominio.CiudadResidenciaDominio;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
 
 public final class CiudadResidenciaDTOAssembler implements DTOAssembler<CiudadResidenciaDominio, CiudadResidenciaDTO> {
+	
+	private static final CiudadResidenciaDTOAssembler INSTANCE = new CiudadResidenciaDTOAssembler();
 
-	private static CiudadResidenciaDTOAssembler INSTANCE = null;
+    private CiudadResidenciaDTOAssembler() {
+        super();
+    }
 
-	private CiudadResidenciaDTOAssembler() {
-		super();
-	}
+    public static CiudadResidenciaDTOAssembler getInstance() {
+        return INSTANCE;
+    }
 
-	public static synchronized CiudadResidenciaDTOAssembler getInstance() {
-		if (INSTANCE == null) {
-			INSTANCE = new CiudadResidenciaDTOAssembler();
-		}
+    @Override
+    public CiudadResidenciaDTO ensamblarDTO(final CiudadResidenciaDominio dominio) {
+        var ciudadResidenciaEnsamblar = UtilObjeto.obtenerValorDefecto(
+                dominio,
+                CiudadResidenciaDominio.builder().build());
 
-		return INSTANCE;
-	}
+        return CiudadResidenciaDTO.builder()
+                .codigoCiudadResidencia(ciudadResidenciaEnsamblar.getCodigoCiudadResidencia())
+                .nombre(ciudadResidenciaEnsamblar.getNombre())
+                .build();
+    }
 
-	@Override
-	public CiudadResidenciaDTO ensamblarDTO(final CiudadResidenciaDominio dominio) {
-		var ciudadResidenciaEnsamblar = dominio == null ? CiudadResidenciaDominio.builder().build() : dominio;
+    @Override
+    public CiudadResidenciaDominio ensamblarDominio(final CiudadResidenciaDTO dto) {
+        var ciudadResidenciaEnsamblar = UtilObjeto.obtenerValorDefecto(
+                dto,
+                CiudadResidenciaDTO.builder().build());
 
-		return CiudadResidenciaDTO.builder()
-				.codigoCiudadResidencia(ciudadResidenciaEnsamblar.getCodigoCiudadResidencia())
-				.nombre(ciudadResidenciaEnsamblar.getNombre())
-				.build();
-	}
-
-	@Override
-	public CiudadResidenciaDominio ensamblarDominio(final CiudadResidenciaDTO dto) {
-		var ciudadResidenciaEnsamblar = dto == null ? CiudadResidenciaDTO.builder().build() : dto;
-
-		return CiudadResidenciaDominio.builder()
-				.codigoCiudadResidencia(ciudadResidenciaEnsamblar.getCodigoCiudadResidencia())
-				.nombre(ciudadResidenciaEnsamblar.getNombre())
-				.build();
-	}
+        return CiudadResidenciaDominio.builder()
+                .codigoCiudadResidencia(ciudadResidenciaEnsamblar.getCodigoCiudadResidencia())
+                .nombre(ciudadResidenciaEnsamblar.getNombre())
+                .build();
+    }
 }

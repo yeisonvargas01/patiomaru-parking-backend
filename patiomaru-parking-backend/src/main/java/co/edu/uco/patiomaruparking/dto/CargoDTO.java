@@ -1,76 +1,82 @@
 package co.edu.uco.patiomaruparking.dto;
 
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+
 public class CargoDTO {
 
-	private String codigoCargo;
-	private String nombre;
-	private Boolean estado;
+    private static final String TEXTO_VACIO = "";
+    private static final Boolean ACTIVO_DEFECTO = Boolean.TRUE;
 
-	private CargoDTO(final Builder builder) {
-		setCodigoCargo(builder.codigoCargo);
-		setNombre(builder.nombre);
-		setEstado(builder.estado);
-	}
+    private String codigoCargo = TEXTO_VACIO;
+    private String nombre = TEXTO_VACIO;
+    private Boolean activo = ACTIVO_DEFECTO;
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    public CargoDTO() {
+        super();
+    }
 
-	public String getCodigoCargo() {
-		return codigoCargo;
-	}
+    private CargoDTO(final Builder builder) {
+        setCodigoCargo(builder.codigoCargo);
+        setNombre(builder.nombre);
+        setActivo(builder.activo);
+    }
 
-	private void setCodigoCargo(final String codigoCargo) {
-		this.codigoCargo = aplicarTrim(codigoCargo);
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	public String getNombre() {
-		return nombre;
-	}
+    public String getCodigoCargo() {
+        return codigoCargo;
+    }
 
-	private void setNombre(final String nombre) {
-		this.nombre = aplicarTrim(nombre);
-	}
+    public void setCodigoCargo(final String codigoCargo) {
+        this.codigoCargo = UtilTexto.aplicarTrim(codigoCargo);
+    }
 
-	public Boolean getEstado() {
-		return estado;
-	}
+    public String getNombre() {
+        return nombre;
+    }
 
-	private void setEstado(final Boolean estado) {
-		this.estado = estado;
-	}
+    public void setNombre(final String nombre) {
+        this.nombre = UtilTexto.aplicarTrim(nombre);
+    }
 
-	public static class Builder {
+    public Boolean getActivo() {
+        return activo;
+    }
 
-		private String codigoCargo;
-		private String nombre;
-		private Boolean estado;
+    public void setActivo(final Boolean activo) {
+        this.activo = UtilObjeto.obtenerValorDefecto(activo, ACTIVO_DEFECTO);
+    }
 
-		private Builder() {
-			super();
-		}
+    public static class Builder {
 
-		public Builder codigoCargo(final String codigoCargo) {
-			this.codigoCargo = aplicarTrim(codigoCargo);
-			return this;
-		}
+        private String codigoCargo = TEXTO_VACIO;
+        private String nombre = TEXTO_VACIO;
+        private Boolean activo = ACTIVO_DEFECTO;
 
-		public Builder nombre(final String nombre) {
-			this.nombre = aplicarTrim(nombre);
-			return this;
-		}
+        private Builder() {
+            super();
+        }
 
-		public Builder estado(final Boolean estado) {
-			this.estado = estado;
-			return this;
-		}
+        public Builder codigoCargo(final String codigoCargo) {
+            this.codigoCargo = UtilTexto.aplicarTrim(codigoCargo);
+            return this;
+        }
 
-		public CargoDTO build() {
-			return new CargoDTO(this);
-		}
-	}
+        public Builder nombre(final String nombre) {
+            this.nombre = UtilTexto.aplicarTrim(nombre);
+            return this;
+        }
 
-	private static String aplicarTrim(final String valor) {
-		return valor == null ? "" : valor.trim();
-	}
+        public Builder activo(final Boolean activo) {
+            this.activo = UtilObjeto.obtenerValorDefecto(activo, ACTIVO_DEFECTO);
+            return this;
+        }
+
+        public CargoDTO build() {
+            return new CargoDTO(this);
+        }
+    }
 }

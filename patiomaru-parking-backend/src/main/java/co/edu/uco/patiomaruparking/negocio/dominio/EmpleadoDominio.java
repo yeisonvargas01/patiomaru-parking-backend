@@ -2,315 +2,347 @@ package co.edu.uco.patiomaruparking.negocio.dominio;
 
 import java.time.LocalDate;
 
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+
 public class EmpleadoDominio {
 
-	private String codigoEmpleado;
-	private String numeroIdentificacion;
-	private String primerNombre;
-	private String primerApellido;
-	private String segundoNombre;
-	private String segundoApellido;
-	private LocalDate fechaNacimiento;
-	private Integer edad;
-	private Boolean estado;
-	private String numeroTelefono;
-	private String correoElectronico;
-	private String direccionResidencia;
-	private CiudadResidenciaDominio ciudadResidencia;
-	private TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion;
-	private CargoDominio cargo;
+    private static final Integer EDAD_DEFECTO = 0;
+    private static final Boolean ESTADO_DEFECTO = Boolean.TRUE;
+    private static final LocalDate FECHA_NACIMIENTO_DEFECTO = LocalDate.MIN;
 
-	private EmpleadoDominio(final Builder builder) {
-		setCodigoEmpleado(builder.codigoEmpleado);
-		setNumeroIdentificacion(builder.numeroIdentificacion);
-		setPrimerNombre(builder.primerNombre);
-		setPrimerApellido(builder.primerApellido);
-		setSegundoNombre(builder.segundoNombre);
-		setSegundoApellido(builder.segundoApellido);
-		setFechaNacimiento(builder.fechaNacimiento);
-		setEdad(builder.edad);
-		setEstado(builder.estado);
-		setNumeroTelefono(builder.numeroTelefono);
-		setCorreoElectronico(builder.correoElectronico);
-		setDireccionResidencia(builder.direccionResidencia);
-		setCiudadResidencia(builder.ciudadResidencia);
-		setTipoDocumentoIdentificacion(builder.tipoDocumentoIdentificacion);
-		setCargo(builder.cargo);
-	}
+    private String codigoEmpleado = UtilTexto.TEXTO_VACIO;
+    private String numeroIdentificacion = UtilTexto.TEXTO_VACIO;
+    private String primerNombre = UtilTexto.TEXTO_VACIO;
+    private String primerApellido = UtilTexto.TEXTO_VACIO;
+    private String segundoNombre = UtilTexto.TEXTO_VACIO;
+    private String segundoApellido = UtilTexto.TEXTO_VACIO;
+    private LocalDate fechaNacimiento = FECHA_NACIMIENTO_DEFECTO;
+    private Integer edad = EDAD_DEFECTO;
+    private Boolean estado = ESTADO_DEFECTO;
+    private String numeroTelefono = UtilTexto.TEXTO_VACIO;
+    private String correoElectronico = UtilTexto.TEXTO_VACIO;
+    private String direccionResidencia = UtilTexto.TEXTO_VACIO;
+    private CiudadResidenciaDominio ciudadResidencia = CiudadResidenciaDominio.builder().build();
+    private TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion = TipoDocumentoIdentificacionDominio.builder().build();
+    private CargoDominio cargo = CargoDominio.builder().build();
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    private EmpleadoDominio(final Builder builder) {
+        setCodigoEmpleado(builder.codigoEmpleado);
+        setNumeroIdentificacion(builder.numeroIdentificacion);
+        setPrimerNombre(builder.primerNombre);
+        setPrimerApellido(builder.primerApellido);
+        setSegundoNombre(builder.segundoNombre);
+        setSegundoApellido(builder.segundoApellido);
+        setFechaNacimiento(builder.fechaNacimiento);
+        setEdad(builder.edad);
+        setEstado(builder.estado);
+        setNumeroTelefono(builder.numeroTelefono);
+        setCorreoElectronico(builder.correoElectronico);
+        setDireccionResidencia(builder.direccionResidencia);
+        setCiudadResidencia(builder.ciudadResidencia);
+        setTipoDocumentoIdentificacion(builder.tipoDocumentoIdentificacion);
+        setCargo(builder.cargo);
+    }
 
-	public String getCodigoEmpleado() {
-		return codigoEmpleado;
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	private void setCodigoEmpleado(final String codigoEmpleado) {
-		this.codigoEmpleado = aplicarTrim(codigoEmpleado);
-	}
+    public String getCodigoEmpleado() {
+        return codigoEmpleado;
+    }
 
-	public String getNumeroIdentificacion() {
-		return numeroIdentificacion;
-	}
+    private void setCodigoEmpleado(final String codigoEmpleado) {
+        this.codigoEmpleado = UtilTexto.aplicarTrim(codigoEmpleado);
+    }
 
-	private void setNumeroIdentificacion(final String numeroIdentificacion) {
-		this.numeroIdentificacion = aplicarTrim(numeroIdentificacion);
-	}
+    public String getNumeroIdentificacion() {
+        return numeroIdentificacion;
+    }
 
-	public String getPrimerNombre() {
-		return primerNombre;
-	}
+    private void setNumeroIdentificacion(final String numeroIdentificacion) {
+        this.numeroIdentificacion = UtilTexto.aplicarTrim(numeroIdentificacion);
+    }
 
-	private void setPrimerNombre(final String primerNombre) {
-		this.primerNombre = aplicarTrim(primerNombre);
-	}
+    public String getPrimerNombre() {
+        return primerNombre;
+    }
 
-	public String getPrimerApellido() {
-		return primerApellido;
-	}
+    private void setPrimerNombre(final String primerNombre) {
+        this.primerNombre = UtilTexto.aplicarTrim(primerNombre);
+    }
 
-	private void setPrimerApellido(final String primerApellido) {
-		this.primerApellido = aplicarTrim(primerApellido);
-	}
+    public String getPrimerApellido() {
+        return primerApellido;
+    }
 
-	public String getSegundoNombre() {
-		return segundoNombre;
-	}
+    private void setPrimerApellido(final String primerApellido) {
+        this.primerApellido = UtilTexto.aplicarTrim(primerApellido);
+    }
 
-	private void setSegundoNombre(final String segundoNombre) {
-		this.segundoNombre = aplicarTrim(segundoNombre);
-	}
+    public String getSegundoNombre() {
+        return segundoNombre;
+    }
 
-	public String getSegundoApellido() {
-		return segundoApellido;
-	}
+    private void setSegundoNombre(final String segundoNombre) {
+        this.segundoNombre = UtilTexto.aplicarTrim(segundoNombre);
+    }
 
-	private void setSegundoApellido(final String segundoApellido) {
-		this.segundoApellido = aplicarTrim(segundoApellido);
-	}
+    public String getSegundoApellido() {
+        return segundoApellido;
+    }
 
-	public LocalDate getFechaNacimiento() {
-		return fechaNacimiento;
-	}
+    private void setSegundoApellido(final String segundoApellido) {
+        this.segundoApellido = UtilTexto.aplicarTrim(segundoApellido);
+    }
 
-	private void setFechaNacimiento(final LocalDate fechaNacimiento) {
-		this.fechaNacimiento = fechaNacimiento;
-	}
+    public LocalDate getFechaNacimiento() {
+        return fechaNacimiento;
+    }
 
-	public Integer getEdad() {
-		return edad;
-	}
+    private void setFechaNacimiento(final LocalDate fechaNacimiento) {
+        this.fechaNacimiento = UtilObjeto.obtenerValorDefecto(
+                fechaNacimiento,
+                FECHA_NACIMIENTO_DEFECTO);
+    }
 
-	private void setEdad(final Integer edad) {
-		this.edad = edad;
-	}
+    public Integer getEdad() {
+        return edad;
+    }
 
-	public Boolean getEstado() {
-		return estado;
-	}
+    private void setEdad(final Integer edad) {
+        this.edad = UtilObjeto.obtenerValorDefecto(
+                edad,
+                EDAD_DEFECTO);
+    }
 
-	private void setEstado(final Boolean estado) {
-		this.estado = estado;
-	}
+    public Boolean getEstado() {
+        return estado;
+    }
 
-	public String getNumeroTelefono() {
-		return numeroTelefono;
-	}
+    private void setEstado(final Boolean estado) {
+        this.estado = UtilObjeto.obtenerValorDefecto(
+                estado,
+                ESTADO_DEFECTO);
+    }
 
-	private void setNumeroTelefono(final String numeroTelefono) {
-		this.numeroTelefono = aplicarTrim(numeroTelefono);
-	}
+    public String getNumeroTelefono() {
+        return numeroTelefono;
+    }
 
-	public String getCorreoElectronico() {
-		return correoElectronico;
-	}
+    private void setNumeroTelefono(final String numeroTelefono) {
+        this.numeroTelefono = UtilTexto.aplicarTrim(numeroTelefono);
+    }
 
-	private void setCorreoElectronico(final String correoElectronico) {
-		this.correoElectronico = aplicarTrim(correoElectronico);
-	}
+    public String getCorreoElectronico() {
+        return correoElectronico;
+    }
 
-	public String getDireccionResidencia() {
-		return direccionResidencia;
-	}
+    private void setCorreoElectronico(final String correoElectronico) {
+        this.correoElectronico = UtilTexto.aplicarTrim(correoElectronico);
+    }
 
-	private void setDireccionResidencia(final String direccionResidencia) {
-		this.direccionResidencia = aplicarTrim(direccionResidencia);
-	}
+    public String getDireccionResidencia() {
+        return direccionResidencia;
+    }
 
-	public CiudadResidenciaDominio getCiudadResidencia() {
-		return ciudadResidencia;
-	}
+    private void setDireccionResidencia(final String direccionResidencia) {
+        this.direccionResidencia = UtilTexto.aplicarTrim(direccionResidencia);
+    }
 
-	private void setCiudadResidencia(final CiudadResidenciaDominio ciudadResidencia) {
-		this.ciudadResidencia = ciudadResidencia == null
-				? CiudadResidenciaDominio.builder().build()
-				: ciudadResidencia;
-	}
+    public CiudadResidenciaDominio getCiudadResidencia() {
+        return ciudadResidencia;
+    }
 
-	public TipoDocumentoIdentificacionDominio getTipoDocumentoIdentificacion() {
-		return tipoDocumentoIdentificacion;
-	}
+    private void setCiudadResidencia(final CiudadResidenciaDominio ciudadResidencia) {
+        this.ciudadResidencia = UtilObjeto.obtenerValorDefecto(
+                ciudadResidencia,
+                CiudadResidenciaDominio.builder().build());
+    }
 
-	private void setTipoDocumentoIdentificacion(final TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion) {
-		this.tipoDocumentoIdentificacion = tipoDocumentoIdentificacion == null
-				? TipoDocumentoIdentificacionDominio.builder().build()
-				: tipoDocumentoIdentificacion;
-	}
+    public TipoDocumentoIdentificacionDominio getTipoDocumentoIdentificacion() {
+        return tipoDocumentoIdentificacion;
+    }
 
-	public CargoDominio getCargo() {
-		return cargo;
-	}
+    private void setTipoDocumentoIdentificacion(
+            final TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion) {
+        this.tipoDocumentoIdentificacion = UtilObjeto.obtenerValorDefecto(
+                tipoDocumentoIdentificacion,
+                TipoDocumentoIdentificacionDominio.builder().build());
+    }
 
-	private void setCargo(final CargoDominio cargo) {
-		this.cargo = cargo == null ? CargoDominio.builder().build() : cargo;
-	}
+    public CargoDominio getCargo() {
+        return cargo;
+    }
 
-	public boolean tieneCodigo() {
-		return !codigoEmpleado.isBlank();
-	}
+    private void setCargo(final CargoDominio cargo) {
+        this.cargo = UtilObjeto.obtenerValorDefecto(
+                cargo,
+                CargoDominio.builder().build());
+    }
 
-	public boolean tieneNumeroIdentificacion() {
-		return !numeroIdentificacion.isBlank();
-	}
+    public boolean tieneCodigo() {
+        return UtilTexto.tieneTexto(codigoEmpleado);
+    }
 
-	public boolean tienePrimerNombre() {
-		return !primerNombre.isBlank();
-	}
+    public boolean tieneNumeroIdentificacion() {
+        return UtilTexto.tieneTexto(numeroIdentificacion);
+    }
 
-	public boolean tienePrimerApellido() {
-		return !primerApellido.isBlank();
-	}
+    public boolean tienePrimerNombre() {
+        return UtilTexto.tieneTexto(primerNombre);
+    }
 
-	public boolean tieneCiudadResidencia() {
-		return ciudadResidencia != null && ciudadResidencia.tieneCodigo();
-	}
+    public boolean tienePrimerApellido() {
+        return UtilTexto.tieneTexto(primerApellido);
+    }
 
-	public boolean tieneTipoDocumentoIdentificacion() {
-		return tipoDocumentoIdentificacion != null && tipoDocumentoIdentificacion.tieneCodigo();
-	}
+    public boolean tieneNumeroTelefono() {
+        return UtilTexto.tieneTexto(numeroTelefono);
+    }
 
-	public boolean tieneCargo() {
-		return cargo != null && cargo.tieneCodigo();
-	}
+    public boolean tieneCorreoElectronico() {
+        return UtilTexto.tieneTexto(correoElectronico);
+    }
 
-	public boolean estaActivo() {
-		return Boolean.TRUE.equals(estado);
-	}
+    public boolean tieneDireccionResidencia() {
+        return UtilTexto.tieneTexto(direccionResidencia);
+    }
 
-	public String obtenerNombreCompleto() {
-		return (primerNombre + " " + segundoNombre + " " + primerApellido + " " + segundoApellido)
-				.replaceAll("\\s+", " ")
-				.trim();
-	}
+    public boolean tieneCiudadResidencia() {
+        return ciudadResidencia.tieneCodigo();
+    }
 
-	public static class Builder {
+    public boolean tieneTipoDocumentoIdentificacion() {
+        return tipoDocumentoIdentificacion.tieneCodigo();
+    }
 
-		private String codigoEmpleado;
-		private String numeroIdentificacion;
-		private String primerNombre;
-		private String primerApellido;
-		private String segundoNombre;
-		private String segundoApellido;
-		private LocalDate fechaNacimiento;
-		private Integer edad;
-		private Boolean estado;
-		private String numeroTelefono;
-		private String correoElectronico;
-		private String direccionResidencia;
-		private CiudadResidenciaDominio ciudadResidencia;
-		private TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion;
-		private CargoDominio cargo;
+    public boolean tieneCargo() {
+        return cargo.tieneCodigo();
+    }
 
-		private Builder() {
-			super();
-		}
+    public boolean estaActivo() {
+        return Boolean.TRUE.equals(estado);
+    }
 
-		public Builder codigoEmpleado(final String codigoEmpleado) {
-			this.codigoEmpleado = aplicarTrim(codigoEmpleado);
-			return this;
-		}
+    public String obtenerNombreCompleto() {
+        var nombreCompleto = primerNombre + " " + segundoNombre + " " + primerApellido + " " + segundoApellido;
+        return UtilTexto.aplicarTrim(nombreCompleto.replaceAll("\\s+", " "));
+    }
 
-		public Builder numeroIdentificacion(final String numeroIdentificacion) {
-			this.numeroIdentificacion = aplicarTrim(numeroIdentificacion);
-			return this;
-		}
+    public static class Builder {
 
-		public Builder primerNombre(final String primerNombre) {
-			this.primerNombre = aplicarTrim(primerNombre);
-			return this;
-		}
+        private String codigoEmpleado = UtilTexto.TEXTO_VACIO;
+        private String numeroIdentificacion = UtilTexto.TEXTO_VACIO;
+        private String primerNombre = UtilTexto.TEXTO_VACIO;
+        private String primerApellido = UtilTexto.TEXTO_VACIO;
+        private String segundoNombre = UtilTexto.TEXTO_VACIO;
+        private String segundoApellido = UtilTexto.TEXTO_VACIO;
+        private LocalDate fechaNacimiento = FECHA_NACIMIENTO_DEFECTO;
+        private Integer edad = EDAD_DEFECTO;
+        private Boolean estado = ESTADO_DEFECTO;
+        private String numeroTelefono = UtilTexto.TEXTO_VACIO;
+        private String correoElectronico = UtilTexto.TEXTO_VACIO;
+        private String direccionResidencia = UtilTexto.TEXTO_VACIO;
+        private CiudadResidenciaDominio ciudadResidencia = CiudadResidenciaDominio.builder().build();
+        private TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion = TipoDocumentoIdentificacionDominio.builder().build();
+        private CargoDominio cargo = CargoDominio.builder().build();
 
-		public Builder primerApellido(final String primerApellido) {
-			this.primerApellido = aplicarTrim(primerApellido);
-			return this;
-		}
+        private Builder() {
+            super();
+        }
 
-		public Builder segundoNombre(final String segundoNombre) {
-			this.segundoNombre = aplicarTrim(segundoNombre);
-			return this;
-		}
+        public Builder codigoEmpleado(final String codigoEmpleado) {
+            this.codigoEmpleado = UtilTexto.aplicarTrim(codigoEmpleado);
+            return this;
+        }
 
-		public Builder segundoApellido(final String segundoApellido) {
-			this.segundoApellido = aplicarTrim(segundoApellido);
-			return this;
-		}
+        public Builder numeroIdentificacion(final String numeroIdentificacion) {
+            this.numeroIdentificacion = UtilTexto.aplicarTrim(numeroIdentificacion);
+            return this;
+        }
 
-		public Builder fechaNacimiento(final LocalDate fechaNacimiento) {
-			this.fechaNacimiento = fechaNacimiento;
-			return this;
-		}
+        public Builder primerNombre(final String primerNombre) {
+            this.primerNombre = UtilTexto.aplicarTrim(primerNombre);
+            return this;
+        }
 
-		public Builder edad(final Integer edad) {
-			this.edad = edad;
-			return this;
-		}
+        public Builder primerApellido(final String primerApellido) {
+            this.primerApellido = UtilTexto.aplicarTrim(primerApellido);
+            return this;
+        }
 
-		public Builder estado(final Boolean estado) {
-			this.estado = estado;
-			return this;
-		}
+        public Builder segundoNombre(final String segundoNombre) {
+            this.segundoNombre = UtilTexto.aplicarTrim(segundoNombre);
+            return this;
+        }
 
-		public Builder numeroTelefono(final String numeroTelefono) {
-			this.numeroTelefono = aplicarTrim(numeroTelefono);
-			return this;
-		}
+        public Builder segundoApellido(final String segundoApellido) {
+            this.segundoApellido = UtilTexto.aplicarTrim(segundoApellido);
+            return this;
+        }
 
-		public Builder correoElectronico(final String correoElectronico) {
-			this.correoElectronico = aplicarTrim(correoElectronico);
-			return this;
-		}
+        public Builder fechaNacimiento(final LocalDate fechaNacimiento) {
+            this.fechaNacimiento = UtilObjeto.obtenerValorDefecto(
+                    fechaNacimiento,
+                    FECHA_NACIMIENTO_DEFECTO);
+            return this;
+        }
 
-		public Builder direccionResidencia(final String direccionResidencia) {
-			this.direccionResidencia = aplicarTrim(direccionResidencia);
-			return this;
-		}
+        public Builder edad(final Integer edad) {
+            this.edad = UtilObjeto.obtenerValorDefecto(
+                    edad,
+                    EDAD_DEFECTO);
+            return this;
+        }
 
-		public Builder ciudadResidencia(final CiudadResidenciaDominio ciudadResidencia) {
-			this.ciudadResidencia = ciudadResidencia == null
-					? CiudadResidenciaDominio.builder().build()
-					: ciudadResidencia;
-			return this;
-		}
+        public Builder estado(final Boolean estado) {
+            this.estado = UtilObjeto.obtenerValorDefecto(
+                    estado,
+                    ESTADO_DEFECTO);
+            return this;
+        }
 
-		public Builder tipoDocumentoIdentificacion(final TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion) {
-			this.tipoDocumentoIdentificacion = tipoDocumentoIdentificacion == null
-					? TipoDocumentoIdentificacionDominio.builder().build()
-					: tipoDocumentoIdentificacion;
-			return this;
-		}
+        public Builder numeroTelefono(final String numeroTelefono) {
+            this.numeroTelefono = UtilTexto.aplicarTrim(numeroTelefono);
+            return this;
+        }
 
-		public Builder cargo(final CargoDominio cargo) {
-			this.cargo = cargo == null ? CargoDominio.builder().build() : cargo;
-			return this;
-		}
+        public Builder correoElectronico(final String correoElectronico) {
+            this.correoElectronico = UtilTexto.aplicarTrim(correoElectronico);
+            return this;
+        }
 
-		public EmpleadoDominio build() {
-			return new EmpleadoDominio(this);
-		}
-	}
+        public Builder direccionResidencia(final String direccionResidencia) {
+            this.direccionResidencia = UtilTexto.aplicarTrim(direccionResidencia);
+            return this;
+        }
 
-	private static String aplicarTrim(final String valor) {
-		return valor == null ? "" : valor.trim();
-	}
+        public Builder ciudadResidencia(final CiudadResidenciaDominio ciudadResidencia) {
+            this.ciudadResidencia = UtilObjeto.obtenerValorDefecto(
+                    ciudadResidencia,
+                    CiudadResidenciaDominio.builder().build());
+            return this;
+        }
+
+        public Builder tipoDocumentoIdentificacion(
+                final TipoDocumentoIdentificacionDominio tipoDocumentoIdentificacion) {
+            this.tipoDocumentoIdentificacion = UtilObjeto.obtenerValorDefecto(
+                    tipoDocumentoIdentificacion,
+                    TipoDocumentoIdentificacionDominio.builder().build());
+            return this;
+        }
+
+        public Builder cargo(final CargoDominio cargo) {
+            this.cargo = UtilObjeto.obtenerValorDefecto(
+                    cargo,
+                    CargoDominio.builder().build());
+            return this;
+        }
+
+        public EmpleadoDominio build() {
+            return new EmpleadoDominio(this);
+        }
+    }
 }

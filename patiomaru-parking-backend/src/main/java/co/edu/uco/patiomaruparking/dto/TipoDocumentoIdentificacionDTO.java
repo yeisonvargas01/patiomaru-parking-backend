@@ -1,60 +1,62 @@
 package co.edu.uco.patiomaruparking.dto;
 
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+
 public class TipoDocumentoIdentificacionDTO {
 
-	private String codigoTipoDocumentoIdentificacion;
-	private String nombre;
+    private String codigoTipoDocumentoIdentificacion = UtilTexto.TEXTO_VACIO;
+    private String nombre = UtilTexto.TEXTO_VACIO;
 
-	private TipoDocumentoIdentificacionDTO(final Builder builder) {
-		setCodigoTipoDocumentoIdentificacion(builder.codigoTipoDocumentoIdentificacion);
-		setNombre(builder.nombre);
-	}
+    public TipoDocumentoIdentificacionDTO() {
+        super();
+    }
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    private TipoDocumentoIdentificacionDTO(final Builder builder) {
+        setCodigoTipoDocumentoIdentificacion(builder.codigoTipoDocumentoIdentificacion);
+        setNombre(builder.nombre);
+    }
 
-	public String getCodigoTipoDocumentoIdentificacion() {
-		return codigoTipoDocumentoIdentificacion;
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	private void setCodigoTipoDocumentoIdentificacion(final String codigoTipoDocumentoIdentificacion) {
-		this.codigoTipoDocumentoIdentificacion = aplicarTrim(codigoTipoDocumentoIdentificacion);
-	}
+    public String getCodigoTipoDocumentoIdentificacion() {
+        return codigoTipoDocumentoIdentificacion;
+    }
 
-	public String getNombre() {
-		return nombre;
-	}
+    public void setCodigoTipoDocumentoIdentificacion(final String codigoTipoDocumentoIdentificacion) {
+        this.codigoTipoDocumentoIdentificacion = UtilTexto.aplicarTrim(codigoTipoDocumentoIdentificacion);
+    }
 
-	private void setNombre(final String nombre) {
-		this.nombre = aplicarTrim(nombre);
-	}
+    public String getNombre() {
+        return nombre;
+    }
 
-	public static class Builder {
+    public void setNombre(final String nombre) {
+        this.nombre = UtilTexto.aplicarTrim(nombre);
+    }
 
-		private String codigoTipoDocumentoIdentificacion;
-		private String nombre;
+    public static class Builder {
 
-		private Builder() {
-			super();
-		}
+        private String codigoTipoDocumentoIdentificacion = UtilTexto.TEXTO_VACIO;
+        private String nombre = UtilTexto.TEXTO_VACIO;
 
-		public Builder codigoTipoDocumentoIdentificacion(final String codigoTipoDocumentoIdentificacion) {
-			this.codigoTipoDocumentoIdentificacion = aplicarTrim(codigoTipoDocumentoIdentificacion);
-			return this;
-		}
+        private Builder() {
+            super();
+        }
 
-		public Builder nombre(final String nombre) {
-			this.nombre = aplicarTrim(nombre);
-			return this;
-		}
+        public Builder codigoTipoDocumentoIdentificacion(final String codigoTipoDocumentoIdentificacion) {
+            this.codigoTipoDocumentoIdentificacion = UtilTexto.aplicarTrim(codigoTipoDocumentoIdentificacion);
+            return this;
+        }
 
-		public TipoDocumentoIdentificacionDTO build() {
-			return new TipoDocumentoIdentificacionDTO(this);
-		}
-	}
+        public Builder nombre(final String nombre) {
+            this.nombre = UtilTexto.aplicarTrim(nombre);
+            return this;
+        }
 
-	private static String aplicarTrim(final String valor) {
-		return valor == null ? "" : valor.trim();
-	}
+        public TipoDocumentoIdentificacionDTO build() {
+            return new TipoDocumentoIdentificacionDTO(this);
+        }
+    }
 }

@@ -6,195 +6,238 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+
 public class PedidoEntidad {
 
-	private String codigoPedido;
-	private LocalDate fechaRegistro;
-	private LocalTime horaRegistro;
-	private String tipoAtencion;
-	private String estado;
-	private BigDecimal totalPedido;
-	private MesaEntidad mesa;
-	private ClienteEntidad cliente;
-	private EmpleadoEntidad empleado;
-	private List<DetallePedidoEntidad> detalles;
-	
+    private static final String ESTADO_DEFECTO = "Registrado";
+    private static final BigDecimal TOTAL_PEDIDO_DEFECTO = BigDecimal.ZERO;
 
-	private PedidoEntidad(final Builder builder) {
-		setCodigoPedido(builder.codigoPedido);
-		setFechaRegistro(builder.fechaRegistro);
-		setHoraRegistro(builder.horaRegistro);
-		setTipoAtencion(builder.tipoAtencion);
-		setEstado(builder.estado);
-		setTotalPedido(builder.totalPedido);
-		setMesa(builder.mesa);
-		setCliente(builder.cliente);
-		setEmpleado(builder.empleado);
-		setDetalles(builder.detalles);
-		
-	}
+    private String codigoPedido = UtilTexto.TEXTO_VACIO;
+    private LocalDate fechaRegistro = obtenerFechaDefecto();
+    private LocalTime horaRegistro = obtenerHoraDefecto();
+    private String tipoAtencion = UtilTexto.TEXTO_VACIO;
+    private String estado = ESTADO_DEFECTO;
+    private BigDecimal totalPedido = TOTAL_PEDIDO_DEFECTO;
+    private MesaEntidad mesa = MesaEntidad.builder().build();
+    private ClienteEntidad cliente = ClienteEntidad.builder().build();
+    private EmpleadoEntidad empleado = EmpleadoEntidad.builder().build();
+    private List<DetallePedidoEntidad> detalles = new ArrayList<>();
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    private PedidoEntidad(final Builder builder) {
+        setCodigoPedido(builder.codigoPedido);
+        setFechaRegistro(builder.fechaRegistro);
+        setHoraRegistro(builder.horaRegistro);
+        setTipoAtencion(builder.tipoAtencion);
+        setEstado(builder.estado);
+        setTotalPedido(builder.totalPedido);
+        setMesa(builder.mesa);
+        setCliente(builder.cliente);
+        setEmpleado(builder.empleado);
+        setDetalles(builder.detalles);
+    }
 
-	public String getCodigoPedido() {
-		return codigoPedido;
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	private void setCodigoPedido(final String codigoPedido) {
-		this.codigoPedido = aplicarTrim(codigoPedido);
-	}
+    public String getCodigoPedido() {
+        return codigoPedido;
+    }
 
-	public LocalDate getFechaRegistro() {
-		return fechaRegistro;
-	}
+    private void setCodigoPedido(final String codigoPedido) {
+        this.codigoPedido = UtilTexto.aplicarTrim(codigoPedido);
+    }
 
-	private void setFechaRegistro(final LocalDate fechaRegistro) {
-		this.fechaRegistro = fechaRegistro;
-	}
+    public LocalDate getFechaRegistro() {
+        return fechaRegistro;
+    }
 
-	public LocalTime getHoraRegistro() {
-		return horaRegistro;
-	}
+    private void setFechaRegistro(final LocalDate fechaRegistro) {
+        this.fechaRegistro = UtilObjeto.obtenerValorDefecto(
+                fechaRegistro,
+                obtenerFechaDefecto());
+    }
 
-	private void setHoraRegistro(final LocalTime horaRegistro) {
-		this.horaRegistro = horaRegistro;
-	}
+    public LocalTime getHoraRegistro() {
+        return horaRegistro;
+    }
 
-	public String getTipoAtencion() {
-		return tipoAtencion;
-	}
+    private void setHoraRegistro(final LocalTime horaRegistro) {
+        this.horaRegistro = UtilObjeto.obtenerValorDefecto(
+                horaRegistro,
+                obtenerHoraDefecto());
+    }
 
-	private void setTipoAtencion(final String tipoAtencion) {
-		this.tipoAtencion = aplicarTrim(tipoAtencion);
-	}
+    public String getTipoAtencion() {
+        return tipoAtencion;
+    }
 
-	public String getEstado() {
-		return estado;
-	}
+    private void setTipoAtencion(final String tipoAtencion) {
+        this.tipoAtencion = UtilTexto.aplicarTrim(tipoAtencion);
+    }
 
-	private void setEstado(final String estado) {
-		this.estado = aplicarTrim(estado);
-	}
+    public String getEstado() {
+        return estado;
+    }
 
-	public BigDecimal getTotalPedido() {
-		return totalPedido;
-	}
+    private void setEstado(final String estado) {
+        var estadoSeguro = UtilTexto.aplicarTrim(estado);
 
-	private void setTotalPedido(final BigDecimal totalPedido) {
-		this.totalPedido = totalPedido;
-	}
+        this.estado = UtilTexto.esVacio(estadoSeguro)
+                ? ESTADO_DEFECTO
+                : estadoSeguro;
+    }
 
-	public MesaEntidad getMesa() {
-		return mesa;
-	}
+    public BigDecimal getTotalPedido() {
+        return totalPedido;
+    }
 
-	private void setMesa(final MesaEntidad mesa) {
-		this.mesa = mesa == null ? MesaEntidad.builder().build() : mesa;
-	}
+    private void setTotalPedido(final BigDecimal totalPedido) {
+        this.totalPedido = UtilObjeto.obtenerValorDefecto(
+                totalPedido,
+                TOTAL_PEDIDO_DEFECTO);
+    }
 
-	public ClienteEntidad getCliente() {
-		return cliente;
-	}
+    public MesaEntidad getMesa() {
+        return mesa;
+    }
 
-	private void setCliente(final ClienteEntidad cliente) {
-		this.cliente = cliente == null ? ClienteEntidad.builder().build() : cliente;
-	}
+    private void setMesa(final MesaEntidad mesa) {
+        this.mesa = UtilObjeto.obtenerValorDefecto(
+                mesa,
+                MesaEntidad.builder().build());
+    }
 
-	public EmpleadoEntidad getEmpleado() {
-		return empleado;
-	}
+    public ClienteEntidad getCliente() {
+        return cliente;
+    }
 
-	private void setEmpleado(final EmpleadoEntidad empleado) {
-		this.empleado = empleado == null ? EmpleadoEntidad.builder().build() : empleado;
-	}
+    private void setCliente(final ClienteEntidad cliente) {
+        this.cliente = UtilObjeto.obtenerValorDefecto(
+                cliente,
+                ClienteEntidad.builder().build());
+    }
 
-	public List<DetallePedidoEntidad> getDetalles() {
-		return detalles;
-	}
+    public EmpleadoEntidad getEmpleado() {
+        return empleado;
+    }
 
-	private void setDetalles(final List<DetallePedidoEntidad> detalles) {
-		this.detalles = detalles == null ? new ArrayList<>() : detalles;
-	}
+    private void setEmpleado(final EmpleadoEntidad empleado) {
+        this.empleado = UtilObjeto.obtenerValorDefecto(
+                empleado,
+                EmpleadoEntidad.builder().build());
+    }
 
+    public List<DetallePedidoEntidad> getDetalles() {
+        return detalles;
+    }
 
+    private void setDetalles(final List<DetallePedidoEntidad> detalles) {
+        this.detalles = new ArrayList<>(
+                UtilObjeto.obtenerValorDefecto(
+                        detalles,
+                        List.<DetallePedidoEntidad>of()));
+    }
 
-	public static class Builder {
+    public static class Builder {
 
-		private String codigoPedido;
-		private LocalDate fechaRegistro;
-		private LocalTime horaRegistro;
-		private String tipoAtencion;
-		private String estado;
-		private BigDecimal totalPedido;
-		private MesaEntidad mesa;
-		private ClienteEntidad cliente;
-		private EmpleadoEntidad empleado;
-		private List<DetallePedidoEntidad> detalles;
-	
+        private String codigoPedido = UtilTexto.TEXTO_VACIO;
+        private LocalDate fechaRegistro = obtenerFechaDefecto();
+        private LocalTime horaRegistro = obtenerHoraDefecto();
+        private String tipoAtencion = UtilTexto.TEXTO_VACIO;
+        private String estado = ESTADO_DEFECTO;
+        private BigDecimal totalPedido = TOTAL_PEDIDO_DEFECTO;
+        private MesaEntidad mesa = MesaEntidad.builder().build();
+        private ClienteEntidad cliente = ClienteEntidad.builder().build();
+        private EmpleadoEntidad empleado = EmpleadoEntidad.builder().build();
+        private List<DetallePedidoEntidad> detalles = new ArrayList<>();
 
-		private Builder() {
-			super();
-		}
+        private Builder() {
+            super();
+        }
 
-		public Builder codigoPedido(final String codigoPedido) {
-			this.codigoPedido = aplicarTrim(codigoPedido);
-			return this;
-		}
+        public Builder codigoPedido(final String codigoPedido) {
+            this.codigoPedido = UtilTexto.aplicarTrim(codigoPedido);
+            return this;
+        }
 
-		public Builder fechaRegistro(final LocalDate fechaRegistro) {
-			this.fechaRegistro = fechaRegistro;
-			return this;
-		}
+        public Builder fechaRegistro(final LocalDate fechaRegistro) {
+            this.fechaRegistro = UtilObjeto.obtenerValorDefecto(
+                    fechaRegistro,
+                    obtenerFechaDefecto());
+            return this;
+        }
 
-		public Builder horaRegistro(final LocalTime horaRegistro) {
-			this.horaRegistro = horaRegistro;
-			return this;
-		}
+        public Builder horaRegistro(final LocalTime horaRegistro) {
+            this.horaRegistro = UtilObjeto.obtenerValorDefecto(
+                    horaRegistro,
+                    obtenerHoraDefecto());
+            return this;
+        }
 
-		public Builder tipoAtencion(final String tipoAtencion) {
-			this.tipoAtencion = aplicarTrim(tipoAtencion);
-			return this;
-		}
+        public Builder tipoAtencion(final String tipoAtencion) {
+            this.tipoAtencion = UtilTexto.aplicarTrim(tipoAtencion);
+            return this;
+        }
 
-		public Builder estado(final String estado) {
-			this.estado = aplicarTrim(estado);
-			return this;
-		}
+        public Builder estado(final String estado) {
+            var estadoSeguro = UtilTexto.aplicarTrim(estado);
 
-		public Builder totalPedido(final BigDecimal totalPedido) {
-			this.totalPedido = totalPedido;
-			return this;
-		}
+            this.estado = UtilTexto.esVacio(estadoSeguro)
+                    ? ESTADO_DEFECTO
+                    : estadoSeguro;
 
-		public Builder mesa(final MesaEntidad mesa) {
-			this.mesa = mesa == null ? MesaEntidad.builder().build() : mesa;
-			return this;
-		}
+            return this;
+        }
 
-		public Builder cliente(final ClienteEntidad cliente) {
-			this.cliente = cliente == null ? ClienteEntidad.builder().build() : cliente;
-			return this;
-		}
+        public Builder totalPedido(final BigDecimal totalPedido) {
+            this.totalPedido = UtilObjeto.obtenerValorDefecto(
+                    totalPedido,
+                    TOTAL_PEDIDO_DEFECTO);
+            return this;
+        }
 
-		public Builder empleado(final EmpleadoEntidad empleado) {
-			this.empleado = empleado == null ? EmpleadoEntidad.builder().build() : empleado;
-			return this;
-		}
+        public Builder mesa(final MesaEntidad mesa) {
+            this.mesa = UtilObjeto.obtenerValorDefecto(
+                    mesa,
+                    MesaEntidad.builder().build());
+            return this;
+        }
 
-		public Builder detalles(final List<DetallePedidoEntidad> detalles) {
-			this.detalles = detalles == null ? new ArrayList<>() : detalles;
-			return this;
-		}
+        public Builder cliente(final ClienteEntidad cliente) {
+            this.cliente = UtilObjeto.obtenerValorDefecto(
+                    cliente,
+                    ClienteEntidad.builder().build());
+            return this;
+        }
 
+        public Builder empleado(final EmpleadoEntidad empleado) {
+            this.empleado = UtilObjeto.obtenerValorDefecto(
+                    empleado,
+                    EmpleadoEntidad.builder().build());
+            return this;
+        }
 
-		public PedidoEntidad build() {
-			return new PedidoEntidad(this);
-		}
-	}
+        public Builder detalles(final List<DetallePedidoEntidad> detalles) {
+            this.detalles = new ArrayList<>(
+                    UtilObjeto.obtenerValorDefecto(
+                            detalles,
+                            List.<DetallePedidoEntidad>of()));
+            return this;
+        }
 
-	private static String aplicarTrim(final String valor) {
-		return valor == null ? "" : valor.trim();
-	}
+        public PedidoEntidad build() {
+            return new PedidoEntidad(this);
+        }
+    }
+
+    private static LocalDate obtenerFechaDefecto() {
+        return LocalDate.now();
+    }
+
+    private static LocalTime obtenerHoraDefecto() {
+        return LocalTime.now();
+    }
 }

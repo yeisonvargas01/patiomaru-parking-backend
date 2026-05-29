@@ -3,40 +3,41 @@ package co.edu.uco.patiomaruparking.negocio.assembler.entidad.impl;
 import co.edu.uco.patiomaruparking.entidad.CategoriaEntidad;
 import co.edu.uco.patiomaruparking.negocio.assembler.entidad.EntidadAssembler;
 import co.edu.uco.patiomaruparking.negocio.dominio.CategoriaDominio;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
 
 public final class CategoriaEntidadAssembler implements EntidadAssembler<CategoriaDominio, CategoriaEntidad> {
 
-	private static CategoriaEntidadAssembler INSTANCE = null;
+    private static final CategoriaEntidadAssembler INSTANCE = new CategoriaEntidadAssembler();
 
-	private CategoriaEntidadAssembler() {
-		super();
-	}
+    private CategoriaEntidadAssembler() {
+        super();
+    }
 
-	public static synchronized CategoriaEntidadAssembler getInstance() {
-		if (INSTANCE == null) {
-			INSTANCE = new CategoriaEntidadAssembler();
-		}
+    public static CategoriaEntidadAssembler getInstance() {
+        return INSTANCE;
+    }
 
-		return INSTANCE;
-	}
+    @Override
+    public CategoriaEntidad ensamblarEntidad(final CategoriaDominio dominio) {
+        var categoriaEnsamblar = UtilObjeto.obtenerValorDefecto(
+                dominio,
+                CategoriaDominio.builder().build());
 
-	@Override
-	public CategoriaEntidad ensamblarEntidad(final CategoriaDominio dominio) {
-		var categoriaEnsamblar = dominio == null ? CategoriaDominio.builder().build() : dominio;
+        return CategoriaEntidad.builder()
+                .codigoCategoria(categoriaEnsamblar.getCodigoCategoria())
+                .nombre(categoriaEnsamblar.getNombre())
+                .build();
+    }
 
-		return CategoriaEntidad.builder()
-				.codigoCategoria(categoriaEnsamblar.getCodigoCategoria())
-				.nombre(categoriaEnsamblar.getNombre())
-				.build();
-	}
+    @Override
+    public CategoriaDominio ensamblarDominio(final CategoriaEntidad entidad) {
+        var categoriaEnsamblar = UtilObjeto.obtenerValorDefecto(
+                entidad,
+                CategoriaEntidad.builder().build());
 
-	@Override
-	public CategoriaDominio ensamblarDominio(final CategoriaEntidad entidad) {
-		var categoriaEnsamblar = entidad == null ? CategoriaEntidad.builder().build() : entidad;
-
-		return CategoriaDominio.builder()
-				.codigoCategoria(categoriaEnsamblar.getCodigoCategoria())
-				.nombre(categoriaEnsamblar.getNombre())
-				.build();
-	}
+        return CategoriaDominio.builder()
+                .codigoCategoria(categoriaEnsamblar.getCodigoCategoria())
+                .nombre(categoriaEnsamblar.getNombre())
+                .build();
+    }
 }

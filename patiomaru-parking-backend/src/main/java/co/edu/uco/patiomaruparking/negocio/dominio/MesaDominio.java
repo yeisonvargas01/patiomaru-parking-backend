@@ -1,64 +1,66 @@
 package co.edu.uco.patiomaruparking.negocio.dominio;
 
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+
 public class MesaDominio {
 
-	private String codigoMesa;
-	private String nombre;
+    private String codigoMesa = UtilTexto.TEXTO_VACIO;
+    private String nombre = UtilTexto.TEXTO_VACIO;
 
-	private MesaDominio(final Builder builder) {
-		setCodigoMesa(builder.codigoMesa);
-		setNombre(builder.nombre);
-	}
+    private MesaDominio(final Builder builder) {
+        setCodigoMesa(builder.codigoMesa);
+        setNombre(builder.nombre);
+    }
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	public String getCodigoMesa() {
-		return codigoMesa;
-	}
+    public String getCodigoMesa() {
+        return codigoMesa;
+    }
 
-	private void setCodigoMesa(final String codigoMesa) {
-		this.codigoMesa = aplicarTrim(codigoMesa);
-	}
+    private void setCodigoMesa(final String codigoMesa) {
+        this.codigoMesa = UtilTexto.aplicarTrim(codigoMesa);
+    }
 
-	public String getNombre() {
-		return nombre;
-	}
+    public String getNombre() {
+        return nombre;
+    }
 
-	private void setNombre(final String nombre) {
-		this.nombre = aplicarTrim(nombre);
-	}
+    private void setNombre(final String nombre) {
+        this.nombre = UtilTexto.aplicarTrim(nombre);
+    }
 
-	public boolean tieneCodigo() {
-		return !codigoMesa.isBlank();
-	}
+    public boolean tieneCodigo() {
+        return UtilTexto.tieneTexto(codigoMesa);
+    }
 
-	public static class Builder {
+    public boolean tieneNombre() {
+        return UtilTexto.tieneTexto(nombre);
+    }
 
-		private String codigoMesa;
-		private String nombre;
+    public static class Builder {
 
-		private Builder() {
-			super();
-		}
+        private String codigoMesa = UtilTexto.TEXTO_VACIO;
+        private String nombre = UtilTexto.TEXTO_VACIO;
 
-		public Builder codigoMesa(final String codigoMesa) {
-			this.codigoMesa = aplicarTrim(codigoMesa);
-			return this;
-		}
+        private Builder() {
+            super();
+        }
 
-		public Builder nombre(final String nombre) {
-			this.nombre = aplicarTrim(nombre);
-			return this;
-		}
+        public Builder codigoMesa(final String codigoMesa) {
+            this.codigoMesa = UtilTexto.aplicarTrim(codigoMesa);
+            return this;
+        }
 
-		public MesaDominio build() {
-			return new MesaDominio(this);
-		}
-	}
+        public Builder nombre(final String nombre) {
+            this.nombre = UtilTexto.aplicarTrim(nombre);
+            return this;
+        }
 
-	private static String aplicarTrim(final String valor) {
-		return valor == null ? "" : valor.trim();
-	}
+        public MesaDominio build() {
+            return new MesaDominio(this);
+        }
+    }
 }

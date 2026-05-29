@@ -6,262 +6,286 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+
 public class PedidoDominio {
 
-	private String codigoPedido;
-	private LocalDate fechaRegistro;
-	private LocalTime horaRegistro;
-	private String tipoAtencion;
-	private String estado;
-	private BigDecimal totalPedido;
-	private MesaDominio mesa;
-	private ClienteDominio cliente;
-	private EmpleadoDominio empleado;
-	private List<DetallePedidoDominio> detalles;
-	
+    private static final String ESTADO_DEFECTO = "Registrado";
+    private static final BigDecimal TOTAL_PEDIDO_DEFECTO = BigDecimal.ZERO;
 
-	private PedidoDominio(final Builder builder) {
-		setCodigoPedido(builder.codigoPedido);
-		setFechaRegistro(builder.fechaRegistro);
-		setHoraRegistro(builder.horaRegistro);
-		setTipoAtencion(builder.tipoAtencion);
-		setEstado(builder.estado);
-		setTotalPedido(builder.totalPedido);
-		setMesa(builder.mesa);
-		setCliente(builder.cliente);
-		setEmpleado(builder.empleado);
-		setDetalles(builder.detalles);
-		
-	}
+    private String codigoPedido = UtilTexto.TEXTO_VACIO;
+    private LocalDate fechaRegistro = obtenerFechaRegistroDefecto();
+    private LocalTime horaRegistro = obtenerHoraRegistroDefecto();
+    private String tipoAtencion = UtilTexto.TEXTO_VACIO;
+    private String estado = ESTADO_DEFECTO;
+    private BigDecimal totalPedido = TOTAL_PEDIDO_DEFECTO;
+    private MesaDominio mesa = MesaDominio.builder().build();
+    private ClienteDominio cliente = ClienteDominio.builder().build();
+    private EmpleadoDominio empleado = EmpleadoDominio.builder().build();
+    private List<DetallePedidoDominio> detalles = new ArrayList<>();
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    private PedidoDominio(final Builder builder) {
+        setCodigoPedido(builder.codigoPedido);
+        setFechaRegistro(builder.fechaRegistro);
+        setHoraRegistro(builder.horaRegistro);
+        setTipoAtencion(builder.tipoAtencion);
+        setEstado(builder.estado);
+        setTotalPedido(builder.totalPedido);
+        setMesa(builder.mesa);
+        setCliente(builder.cliente);
+        setEmpleado(builder.empleado);
+        setDetalles(builder.detalles);
+    }
 
-	public String getCodigoPedido() {
-		return codigoPedido;
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	private void setCodigoPedido(final String codigoPedido) {
-		this.codigoPedido = aplicarTrim(codigoPedido);
-	}
+    public String getCodigoPedido() {
+        return codigoPedido;
+    }
 
-	public LocalDate getFechaRegistro() {
-		return fechaRegistro;
-	}
+    private void setCodigoPedido(final String codigoPedido) {
+        this.codigoPedido = UtilTexto.aplicarTrim(codigoPedido);
+    }
 
-	private void setFechaRegistro(final LocalDate fechaRegistro) {
-		this.fechaRegistro = fechaRegistro;
-	}
+    public LocalDate getFechaRegistro() {
+        return fechaRegistro;
+    }
 
-	public LocalTime getHoraRegistro() {
-		return horaRegistro;
-	}
+    private void setFechaRegistro(final LocalDate fechaRegistro) {
+        this.fechaRegistro = UtilObjeto.obtenerValorDefecto(
+                fechaRegistro,
+                obtenerFechaRegistroDefecto());
+    }
 
-	private void setHoraRegistro(final LocalTime horaRegistro) {
-		this.horaRegistro = horaRegistro;
-	}
+    public LocalTime getHoraRegistro() {
+        return horaRegistro;
+    }
 
-	public String getTipoAtencion() {
-		return tipoAtencion;
-	}
+    private void setHoraRegistro(final LocalTime horaRegistro) {
+        this.horaRegistro = UtilObjeto.obtenerValorDefecto(
+                horaRegistro,
+                obtenerHoraRegistroDefecto());
+    }
 
-	private void setTipoAtencion(final String tipoAtencion) {
-		this.tipoAtencion = aplicarTrim(tipoAtencion);
-	}
+    public String getTipoAtencion() {
+        return tipoAtencion;
+    }
 
-	public String getEstado() {
-		return estado;
-	}
+    private void setTipoAtencion(final String tipoAtencion) {
+        this.tipoAtencion = UtilTexto.aplicarTrim(tipoAtencion);
+    }
 
-	private void setEstado(final String estado) {
-		this.estado = aplicarTrim(estado);
-	}
+    public String getEstado() {
+        return estado;
+    }
 
-	public BigDecimal getTotalPedido() {
-		return totalPedido;
-	}
+    private void setEstado(final String estado) {
+        var estadoSeguro = UtilTexto.aplicarTrim(estado);
 
-	private void setTotalPedido(final BigDecimal totalPedido) {
-		this.totalPedido = totalPedido;
-	}
+        this.estado = UtilTexto.esVacio(estadoSeguro)
+                ? ESTADO_DEFECTO
+                : estadoSeguro;
+    }
 
-	public MesaDominio getMesa() {
-		return mesa;
-	}
+    public BigDecimal getTotalPedido() {
+        return totalPedido;
+    }
 
-	private void setMesa(final MesaDominio mesa) {
-		this.mesa = mesa == null ? MesaDominio.builder().build() : mesa;
-	}
+    private void setTotalPedido(final BigDecimal totalPedido) {
+        this.totalPedido = UtilObjeto.obtenerValorDefecto(
+                totalPedido,
+                TOTAL_PEDIDO_DEFECTO);
+    }
 
-	public ClienteDominio getCliente() {
-		return cliente;
-	}
+    public MesaDominio getMesa() {
+        return mesa;
+    }
 
-	private void setCliente(final ClienteDominio cliente) {
-		this.cliente = cliente == null ? ClienteDominio.builder().build() : cliente;
-	}
+    private void setMesa(final MesaDominio mesa) {
+        this.mesa = UtilObjeto.obtenerValorDefecto(
+                mesa,
+                MesaDominio.builder().build());
+    }
 
-	public EmpleadoDominio getEmpleado() {
-		return empleado;
-	}
+    public ClienteDominio getCliente() {
+        return cliente;
+    }
 
-	private void setEmpleado(final EmpleadoDominio empleado) {
-		this.empleado = empleado == null ? EmpleadoDominio.builder().build() : empleado;
-	}
+    private void setCliente(final ClienteDominio cliente) {
+        this.cliente = UtilObjeto.obtenerValorDefecto(
+                cliente,
+                ClienteDominio.builder().build());
+    }
 
-	public List<DetallePedidoDominio> getDetalles() {
-		return detalles;
-	}
+    public EmpleadoDominio getEmpleado() {
+        return empleado;
+    }
 
-	private void setDetalles(final List<DetallePedidoDominio> detalles) {
-		this.detalles = detalles == null ? new ArrayList<>() : detalles;
-	}
+    private void setEmpleado(final EmpleadoDominio empleado) {
+        this.empleado = UtilObjeto.obtenerValorDefecto(
+                empleado,
+                EmpleadoDominio.builder().build());
+    }
 
+    public List<DetallePedidoDominio> getDetalles() {
+        return detalles;
+    }
 
-	public boolean tieneCodigo() {
-		return !codigoPedido.isBlank();
-	}
+    private void setDetalles(final List<DetallePedidoDominio> detalles) {
+        this.detalles = new ArrayList<>(
+                UtilObjeto.obtenerValorDefecto(
+                        detalles,
+                        List.<DetallePedidoDominio>of()));
+    }
 
-	public boolean tieneTipoAtencion() {
-		return !tipoAtencion.isBlank();
-	}
+    public boolean tieneCodigo() {
+        return UtilTexto.tieneTexto(codigoPedido);
+    }
 
-	public boolean tieneEstado() {
-		return !estado.isBlank();
-	}
+    public boolean tieneTipoAtencion() {
+        return UtilTexto.tieneTexto(tipoAtencion);
+    }
 
-	public boolean tieneCliente() {
-		return cliente != null && cliente.getCodigoCliente() != null && !cliente.getCodigoCliente().isBlank();
-	}
+    public boolean tieneEstado() {
+        return UtilTexto.tieneTexto(estado);
+    }
 
-	public boolean tieneEmpleado() {
-		return empleado != null && empleado.tieneCodigo();
-	}
+    public boolean tieneCliente() {
+        return cliente.tieneCodigo();
+    }
 
-	public boolean tieneMesa() {
-		return mesa != null && mesa.tieneCodigo();
-	}
+    public boolean tieneEmpleado() {
+        return empleado.tieneCodigo();
+    }
 
-	public boolean tieneDetalles() {
-		return detalles != null && !detalles.isEmpty();
-	}
+    public boolean tieneMesa() {
+        return mesa.tieneCodigo();
+    }
 
+    public boolean tieneDetalles() {
+        return !detalles.isEmpty();
+    }
 
-	public boolean estaCancelado() {
-		return "CANCELADO".equalsIgnoreCase(estado);
-	}
+    public boolean tieneTotalPedidoValido() {
+        return totalPedido.compareTo(TOTAL_PEDIDO_DEFECTO) >= 0;
+    }
 
-	public boolean estaRegistrado() {
-		return "REGISTRADO".equalsIgnoreCase(estado);
-	}
+    public boolean esAtencionEnMesa() {
+        return "Mesa".equalsIgnoreCase(tipoAtencion);
+    }
 
-	public BigDecimal calcularTotalPedido() {
-		if (!tieneDetalles()) {
-			return BigDecimal.ZERO;
-		}
+    public boolean esAtencionParaLlevar() {
+        return "Para llevar".equalsIgnoreCase(tipoAtencion);
+    }
 
-		BigDecimal total = BigDecimal.ZERO;
+    public boolean estaCancelado() {
+        return "Cancelado".equalsIgnoreCase(estado);
+    }
 
-		for (DetallePedidoDominio detalle : detalles) {
-			if (detalle != null) {
-				total = total.add(detalle.calcularSubtotal());
-			}
-		}
+    public boolean estaRegistrado() {
+        return "Registrado".equalsIgnoreCase(estado);
+    }
 
-		return total;
-	}
+    public static class Builder {
 
-	public PedidoDominio actualizarTotalCalculado() {
-		return PedidoDominio.builder()
-				.codigoPedido(getCodigoPedido())
-				.fechaRegistro(getFechaRegistro())
-				.horaRegistro(getHoraRegistro())
-				.tipoAtencion(getTipoAtencion())
-				.estado(getEstado())
-				.totalPedido(calcularTotalPedido())
-				.mesa(getMesa())
-				.cliente(getCliente())
-				.empleado(getEmpleado())
-				.detalles(getDetalles())
-				.build();
-	}
+        private String codigoPedido = UtilTexto.TEXTO_VACIO;
+        private LocalDate fechaRegistro = obtenerFechaRegistroDefecto();
+        private LocalTime horaRegistro = obtenerHoraRegistroDefecto();
+        private String tipoAtencion = UtilTexto.TEXTO_VACIO;
+        private String estado = ESTADO_DEFECTO;
+        private BigDecimal totalPedido = TOTAL_PEDIDO_DEFECTO;
+        private MesaDominio mesa = MesaDominio.builder().build();
+        private ClienteDominio cliente = ClienteDominio.builder().build();
+        private EmpleadoDominio empleado = EmpleadoDominio.builder().build();
+        private List<DetallePedidoDominio> detalles = new ArrayList<>();
 
-	public static class Builder {
+        private Builder() {
+            super();
+        }
 
-		private String codigoPedido;
-		private LocalDate fechaRegistro;
-		private LocalTime horaRegistro;
-		private String tipoAtencion;
-		private String estado;
-		private BigDecimal totalPedido;
-		private MesaDominio mesa;
-		private ClienteDominio cliente;
-		private EmpleadoDominio empleado;
-		private List<DetallePedidoDominio> detalles;
-	
+        public Builder codigoPedido(final String codigoPedido) {
+            this.codigoPedido = UtilTexto.aplicarTrim(codigoPedido);
+            return this;
+        }
 
-		private Builder() {
-			super();
-		}
+        public Builder fechaRegistro(final LocalDate fechaRegistro) {
+            this.fechaRegistro = UtilObjeto.obtenerValorDefecto(
+                    fechaRegistro,
+                    obtenerFechaRegistroDefecto());
+            return this;
+        }
 
-		public Builder codigoPedido(final String codigoPedido) {
-			this.codigoPedido = aplicarTrim(codigoPedido);
-			return this;
-		}
+        public Builder horaRegistro(final LocalTime horaRegistro) {
+            this.horaRegistro = UtilObjeto.obtenerValorDefecto(
+                    horaRegistro,
+                    obtenerHoraRegistroDefecto());
+            return this;
+        }
 
-		public Builder fechaRegistro(final LocalDate fechaRegistro) {
-			this.fechaRegistro = fechaRegistro;
-			return this;
-		}
+        public Builder tipoAtencion(final String tipoAtencion) {
+            this.tipoAtencion = UtilTexto.aplicarTrim(tipoAtencion);
+            return this;
+        }
 
-		public Builder horaRegistro(final LocalTime horaRegistro) {
-			this.horaRegistro = horaRegistro;
-			return this;
-		}
+        public Builder estado(final String estado) {
+            var estadoSeguro = UtilTexto.aplicarTrim(estado);
 
-		public Builder tipoAtencion(final String tipoAtencion) {
-			this.tipoAtencion = aplicarTrim(tipoAtencion);
-			return this;
-		}
+            this.estado = UtilTexto.esVacio(estadoSeguro)
+                    ? ESTADO_DEFECTO
+                    : estadoSeguro;
 
-		public Builder estado(final String estado) {
-			this.estado = aplicarTrim(estado);
-			return this;
-		}
+            return this;
+        }
 
-		public Builder totalPedido(final BigDecimal totalPedido) {
-			this.totalPedido = totalPedido;
-			return this;
-		}
+        public Builder totalPedido(final BigDecimal totalPedido) {
+            this.totalPedido = UtilObjeto.obtenerValorDefecto(
+                    totalPedido,
+                    TOTAL_PEDIDO_DEFECTO);
+            return this;
+        }
 
-		public Builder mesa(final MesaDominio mesa) {
-			this.mesa = mesa == null ? MesaDominio.builder().build() : mesa;
-			return this;
-		}
+        public Builder mesa(final MesaDominio mesa) {
+            this.mesa = UtilObjeto.obtenerValorDefecto(
+                    mesa,
+                    MesaDominio.builder().build());
+            return this;
+        }
 
-		public Builder cliente(final ClienteDominio cliente) {
-			this.cliente = cliente == null ? ClienteDominio.builder().build() : cliente;
-			return this;
-		}
+        public Builder cliente(final ClienteDominio cliente) {
+            this.cliente = UtilObjeto.obtenerValorDefecto(
+                    cliente,
+                    ClienteDominio.builder().build());
+            return this;
+        }
 
-		public Builder empleado(final EmpleadoDominio empleado) {
-			this.empleado = empleado == null ? EmpleadoDominio.builder().build() : empleado;
-			return this;
-		}
+        public Builder empleado(final EmpleadoDominio empleado) {
+            this.empleado = UtilObjeto.obtenerValorDefecto(
+                    empleado,
+                    EmpleadoDominio.builder().build());
+            return this;
+        }
 
-		public Builder detalles(final List<DetallePedidoDominio> detalles) {
-			this.detalles = detalles == null ? new ArrayList<>() : detalles;
-			return this;
-		}
+        public Builder detalles(final List<DetallePedidoDominio> detalles) {
+            this.detalles = new ArrayList<>(
+                    UtilObjeto.obtenerValorDefecto(
+                            detalles,
+                            List.<DetallePedidoDominio>of()));
+            return this;
+        }
 
+        public PedidoDominio build() {
+            return new PedidoDominio(this);
+        }
+    }
 
-		public PedidoDominio build() {
-			return new PedidoDominio(this);
-		}
-	}
+    private static LocalDate obtenerFechaRegistroDefecto() {
+        return LocalDate.now();
+    }
 
-	private static String aplicarTrim(final String valor) {
-		return valor == null ? "" : valor.trim();
-	}
+    private static LocalTime obtenerHoraRegistroDefecto() {
+        return LocalTime.now();
+    }
 }

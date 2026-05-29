@@ -17,4 +17,8 @@ public final class DatosPatioMaruException extends PatioMaruException {
 			final Throwable excepcionRaiz) {
 		return new DatosPatioMaruException(mensajeUsuario, mensajeTecnico, excepcionRaiz);
 	}
+	
+	public static DatosPatioMaruException(final String mensaje);
+	
+	
 }

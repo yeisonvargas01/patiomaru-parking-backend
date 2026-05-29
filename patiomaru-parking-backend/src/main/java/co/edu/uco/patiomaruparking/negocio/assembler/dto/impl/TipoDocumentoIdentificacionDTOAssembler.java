@@ -3,45 +3,42 @@ package co.edu.uco.patiomaruparking.negocio.assembler.dto.impl;
 import co.edu.uco.patiomaruparking.dto.TipoDocumentoIdentificacionDTO;
 import co.edu.uco.patiomaruparking.negocio.assembler.dto.DTOAssembler;
 import co.edu.uco.patiomaruparking.negocio.dominio.TipoDocumentoIdentificacionDominio;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
 
 public final class TipoDocumentoIdentificacionDTOAssembler
-		implements DTOAssembler<TipoDocumentoIdentificacionDominio, TipoDocumentoIdentificacionDTO> {
+        implements DTOAssembler<TipoDocumentoIdentificacionDominio, TipoDocumentoIdentificacionDTO> {
+	
+	private static final TipoDocumentoIdentificacionDTOAssembler INSTANCE = new TipoDocumentoIdentificacionDTOAssembler();
 
-	private static TipoDocumentoIdentificacionDTOAssembler INSTANCE = null;
+    private TipoDocumentoIdentificacionDTOAssembler() {
+        super();
+    }
 
-	private TipoDocumentoIdentificacionDTOAssembler() {
-		super();
-	}
+    public static TipoDocumentoIdentificacionDTOAssembler getInstance() {
+        return INSTANCE;
+    }
 
-	public static synchronized TipoDocumentoIdentificacionDTOAssembler getInstance() {
-		if (INSTANCE == null) {
-			INSTANCE = new TipoDocumentoIdentificacionDTOAssembler();
-		}
+    @Override
+    public TipoDocumentoIdentificacionDTO ensamblarDTO(final TipoDocumentoIdentificacionDominio dominio) {
+        var tipoDocumentoEnsamblar = UtilObjeto.obtenerValorDefecto(
+                dominio,
+                TipoDocumentoIdentificacionDominio.builder().build());
 
-		return INSTANCE;
-	}
+        return TipoDocumentoIdentificacionDTO.builder()
+                .codigoTipoDocumentoIdentificacion(tipoDocumentoEnsamblar.getCodigoTipoDocumentoIdentificacion())
+                .nombre(tipoDocumentoEnsamblar.getNombre())
+                .build();
+    }
 
-	@Override
-	public TipoDocumentoIdentificacionDTO ensamblarDTO(final TipoDocumentoIdentificacionDominio dominio) {
-		var tipoDocumentoEnsamblar = dominio == null
-				? TipoDocumentoIdentificacionDominio.builder().build()
-				: dominio;
+    @Override
+    public TipoDocumentoIdentificacionDominio ensamblarDominio(final TipoDocumentoIdentificacionDTO dto) {
+        var tipoDocumentoEnsamblar = UtilObjeto.obtenerValorDefecto(
+                dto,
+                TipoDocumentoIdentificacionDTO.builder().build());
 
-		return TipoDocumentoIdentificacionDTO.builder()
-				.codigoTipoDocumentoIdentificacion(tipoDocumentoEnsamblar.getCodigoTipoDocumentoIdentificacion())
-				.nombre(tipoDocumentoEnsamblar.getNombre())
-				.build();
-	}
-
-	@Override
-	public TipoDocumentoIdentificacionDominio ensamblarDominio(final TipoDocumentoIdentificacionDTO dto) {
-		var tipoDocumentoEnsamblar = dto == null
-				? TipoDocumentoIdentificacionDTO.builder().build()
-				: dto;
-
-		return TipoDocumentoIdentificacionDominio.builder()
-				.codigoTipoDocumentoIdentificacion(tipoDocumentoEnsamblar.getCodigoTipoDocumentoIdentificacion())
-				.nombre(tipoDocumentoEnsamblar.getNombre())
-				.build();
-	}
+        return TipoDocumentoIdentificacionDominio.builder()
+                .codigoTipoDocumentoIdentificacion(tipoDocumentoEnsamblar.getCodigoTipoDocumentoIdentificacion())
+                .nombre(tipoDocumentoEnsamblar.getNombre())
+                .build();
+    }
 }

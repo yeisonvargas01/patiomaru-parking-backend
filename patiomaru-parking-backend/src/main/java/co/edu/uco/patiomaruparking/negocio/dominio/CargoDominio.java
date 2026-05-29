@@ -1,88 +1,89 @@
 package co.edu.uco.patiomaruparking.negocio.dominio;
 
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+
 public class CargoDominio {
 
-	private String codigoCargo;
-	private String nombre;
-	private Boolean estado;
+    private static final Boolean ACTIVO_DEFECTO = Boolean.TRUE;
 
-	private CargoDominio(final Builder builder) {
-		setCodigoCargo(builder.codigoCargo);
-		setNombre(builder.nombre);
-		setEstado(builder.estado);
-	}
+    private String codigoCargo = UtilTexto.TEXTO_VACIO;
+    private String nombre = UtilTexto.TEXTO_VACIO;
+    private Boolean activo = ACTIVO_DEFECTO;
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    private CargoDominio(final Builder builder) {
+        setCodigoCargo(builder.codigoCargo);
+        setNombre(builder.nombre);
+        setActivo(builder.activo);
+    }
 
-	public String getCodigoCargo() {
-		return codigoCargo;
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	private void setCodigoCargo(final String codigoCargo) {
-		this.codigoCargo = aplicarTrim(codigoCargo);
-	}
+    public String getCodigoCargo() {
+        return codigoCargo;
+    }
 
-	public String getNombre() {
-		return nombre;
-	}
+    private void setCodigoCargo(final String codigoCargo) {
+        this.codigoCargo = UtilTexto.aplicarTrim(codigoCargo);
+    }
 
-	private void setNombre(final String nombre) {
-		this.nombre = aplicarTrim(nombre);
-	}
+    public String getNombre() {
+        return nombre;
+    }
 
-	public Boolean getEstado() {
-		return estado;
-	}
+    private void setNombre(final String nombre) {
+        this.nombre = UtilTexto.aplicarTrim(nombre);
+    }
 
-	private void setEstado(final Boolean estado) {
-		this.estado = estado;
-	}
+    public Boolean getActivo() {
+        return activo;
+    }
 
-	public boolean tieneCodigo() {
-		return !codigoCargo.isBlank();
-	}
+    private void setActivo(final Boolean activo) {
+        this.activo = UtilObjeto.obtenerValorDefecto(activo, ACTIVO_DEFECTO);
+    }
 
-	public boolean tieneNombre() {
-		return !nombre.isBlank();
-	}
+    public boolean tieneCodigo() {
+        return UtilTexto.tieneTexto(codigoCargo);
+    }
 
-	public boolean estaActivo() {
-		return Boolean.TRUE.equals(estado);
-	}
+    public boolean tieneNombre() {
+        return UtilTexto.tieneTexto(nombre);
+    }
 
-	public static class Builder {
+    public boolean estaActivo() {
+        return Boolean.TRUE.equals(activo);
+    }
 
-		private String codigoCargo;
-		private String nombre;
-		private Boolean estado;
+    public static class Builder {
 
-		private Builder() {
-			super();
-		}
+        private String codigoCargo = UtilTexto.TEXTO_VACIO;
+        private String nombre = UtilTexto.TEXTO_VACIO;
+        private Boolean activo = ACTIVO_DEFECTO;
 
-		public Builder codigoCargo(final String codigoCargo) {
-			this.codigoCargo = aplicarTrim(codigoCargo);
-			return this;
-		}
+        private Builder() {
+            super();
+        }
 
-		public Builder nombre(final String nombre) {
-			this.nombre = aplicarTrim(nombre);
-			return this;
-		}
+        public Builder codigoCargo(final String codigoCargo) {
+            this.codigoCargo = UtilTexto.aplicarTrim(codigoCargo);
+            return this;
+        }
 
-		public Builder estado(final Boolean estado) {
-			this.estado = estado;
-			return this;
-		}
+        public Builder nombre(final String nombre) {
+            this.nombre = UtilTexto.aplicarTrim(nombre);
+            return this;
+        }
 
-		public CargoDominio build() {
-			return new CargoDominio(this);
-		}
-	}
+        public Builder activo(final Boolean activo) {
+            this.activo = UtilObjeto.obtenerValorDefecto(activo, ACTIVO_DEFECTO);
+            return this;
+        }
 
-	private static String aplicarTrim(final String valor) {
-		return valor == null ? "" : valor.trim();
-	}
+        public CargoDominio build() {
+            return new CargoDominio(this);
+        }
+    }
 }

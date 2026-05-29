@@ -2,109 +2,123 @@ package co.edu.uco.patiomaruparking.entidad;
 
 import java.math.BigDecimal;
 
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+
 public class PlatoEntidad {
 
-	private String codigoPlato;
-	private String nombre;
-	private BigDecimal precioVenta;
-	private Boolean estado;
-	private CategoriaEntidad categoria;
+    private static final BigDecimal PRECIO_VENTA_DEFECTO = BigDecimal.ZERO;
+    private static final Boolean ESTADO_DEFECTO = Boolean.TRUE;
 
-	private PlatoEntidad(final Builder builder) {
-		setCodigoPlato(builder.codigoPlato);
-		setNombre(builder.nombre);
-		setPrecioVenta(builder.precioVenta);
-		setEstado(builder.estado);
-		setCategoria(builder.categoria);
-	}
+    private String codigoPlato = UtilTexto.TEXTO_VACIO;
+    private String nombre = UtilTexto.TEXTO_VACIO;
+    private BigDecimal precioVenta = PRECIO_VENTA_DEFECTO;
+    private Boolean estado = ESTADO_DEFECTO;
+    private CategoriaEntidad categoria = CategoriaEntidad.builder().build();
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    private PlatoEntidad(final Builder builder) {
+        setCodigoPlato(builder.codigoPlato);
+        setNombre(builder.nombre);
+        setPrecioVenta(builder.precioVenta);
+        setEstado(builder.estado);
+        setCategoria(builder.categoria);
+    }
 
-	public String getCodigoPlato() {
-		return codigoPlato;
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	private void setCodigoPlato(final String codigoPlato) {
-		this.codigoPlato = aplicarTrim(codigoPlato);
-	}
+    public String getCodigoPlato() {
+        return codigoPlato;
+    }
 
-	public String getNombre() {
-		return nombre;
-	}
+    private void setCodigoPlato(final String codigoPlato) {
+        this.codigoPlato = UtilTexto.aplicarTrim(codigoPlato);
+    }
 
-	private void setNombre(final String nombre) {
-		this.nombre = aplicarTrim(nombre);
-	}
+    public String getNombre() {
+        return nombre;
+    }
 
-	public BigDecimal getPrecioVenta() {
-		return precioVenta;
-	}
+    private void setNombre(final String nombre) {
+        this.nombre = UtilTexto.aplicarTrim(nombre);
+    }
 
-	private void setPrecioVenta(final BigDecimal precioVenta) {
-		this.precioVenta = precioVenta;
-	}
+    public BigDecimal getPrecioVenta() {
+        return precioVenta;
+    }
 
-	public Boolean getEstado() {
-		return estado;
-	}
+    private void setPrecioVenta(final BigDecimal precioVenta) {
+        this.precioVenta = UtilObjeto.obtenerValorDefecto(
+                precioVenta,
+                PRECIO_VENTA_DEFECTO);
+    }
 
-	private void setEstado(final Boolean estado) {
-		this.estado = estado;
-	}
+    public Boolean getEstado() {
+        return estado;
+    }
 
-	public CategoriaEntidad getCategoria() {
-		return categoria;
-	}
+    private void setEstado(final Boolean estado) {
+        this.estado = UtilObjeto.obtenerValorDefecto(
+                estado,
+                ESTADO_DEFECTO);
+    }
 
-	private void setCategoria(final CategoriaEntidad categoria) {
-		this.categoria = categoria == null ? CategoriaEntidad.builder().build() : categoria;
-	}
+    public CategoriaEntidad getCategoria() {
+        return categoria;
+    }
 
-	public static class Builder {
+    private void setCategoria(final CategoriaEntidad categoria) {
+        this.categoria = UtilObjeto.obtenerValorDefecto(
+                categoria,
+                CategoriaEntidad.builder().build());
+    }
 
-		private String codigoPlato;
-		private String nombre;
-		private BigDecimal precioVenta;
-		private Boolean estado;
-		private CategoriaEntidad categoria;
+    public static class Builder {
 
-		private Builder() {
-			super();
-		}
+        private String codigoPlato = UtilTexto.TEXTO_VACIO;
+        private String nombre = UtilTexto.TEXTO_VACIO;
+        private BigDecimal precioVenta = PRECIO_VENTA_DEFECTO;
+        private Boolean estado = ESTADO_DEFECTO;
+        private CategoriaEntidad categoria = CategoriaEntidad.builder().build();
 
-		public Builder codigoPlato(final String codigoPlato) {
-			this.codigoPlato = aplicarTrim(codigoPlato);
-			return this;
-		}
+        private Builder() {
+            super();
+        }
 
-		public Builder nombre(final String nombre) {
-			this.nombre = aplicarTrim(nombre);
-			return this;
-		}
+        public Builder codigoPlato(final String codigoPlato) {
+            this.codigoPlato = UtilTexto.aplicarTrim(codigoPlato);
+            return this;
+        }
 
-		public Builder precioVenta(final BigDecimal precioVenta) {
-			this.precioVenta = precioVenta;
-			return this;
-		}
+        public Builder nombre(final String nombre) {
+            this.nombre = UtilTexto.aplicarTrim(nombre);
+            return this;
+        }
 
-		public Builder estado(final Boolean estado) {
-			this.estado = estado;
-			return this;
-		}
+        public Builder precioVenta(final BigDecimal precioVenta) {
+            this.precioVenta = UtilObjeto.obtenerValorDefecto(
+                    precioVenta,
+                    PRECIO_VENTA_DEFECTO);
+            return this;
+        }
 
-		public Builder categoria(final CategoriaEntidad categoria) {
-			this.categoria = categoria == null ? CategoriaEntidad.builder().build() : categoria;
-			return this;
-		}
+        public Builder estado(final Boolean estado) {
+            this.estado = UtilObjeto.obtenerValorDefecto(
+                    estado,
+                    ESTADO_DEFECTO);
+            return this;
+        }
 
-		public PlatoEntidad build() {
-			return new PlatoEntidad(this);
-		}
-	}
+        public Builder categoria(final CategoriaEntidad categoria) {
+            this.categoria = UtilObjeto.obtenerValorDefecto(
+                    categoria,
+                    CategoriaEntidad.builder().build());
+            return this;
+        }
 
-	private static String aplicarTrim(final String valor) {
-		return valor == null ? "" : valor.trim();
-	}
+        public PlatoEntidad build() {
+            return new PlatoEntidad(this);
+        }
+    }
 }

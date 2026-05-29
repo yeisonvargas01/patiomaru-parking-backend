@@ -3,42 +3,43 @@ package co.edu.uco.patiomaruparking.negocio.assembler.entidad.impl;
 import co.edu.uco.patiomaruparking.entidad.CargoEntidad;
 import co.edu.uco.patiomaruparking.negocio.assembler.entidad.EntidadAssembler;
 import co.edu.uco.patiomaruparking.negocio.dominio.CargoDominio;
+import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
 
 public final class CargoEntidadAssembler implements EntidadAssembler<CargoDominio, CargoEntidad> {
 
-	private static CargoEntidadAssembler INSTANCE = null;
+    private static final CargoEntidadAssembler INSTANCE = new CargoEntidadAssembler();
 
-	private CargoEntidadAssembler() {
-		super();
-	}
+    private CargoEntidadAssembler() {
+        super();
+    }
 
-	public static synchronized CargoEntidadAssembler getInstance() {
-		if (INSTANCE == null) {
-			INSTANCE = new CargoEntidadAssembler();
-		}
+    public static CargoEntidadAssembler getInstance() {
+        return INSTANCE;
+    }
 
-		return INSTANCE;
-	}
+    @Override
+    public CargoEntidad ensamblarEntidad(final CargoDominio dominio) {
+        var cargoEnsamblar = UtilObjeto.obtenerValorDefecto(
+                dominio,
+                CargoDominio.builder().build());
 
-	@Override
-	public CargoEntidad ensamblarEntidad(final CargoDominio dominio) {
-		var cargoEnsamblar = dominio == null ? CargoDominio.builder().build() : dominio;
+        return CargoEntidad.builder()
+                .codigoCargo(cargoEnsamblar.getCodigoCargo())
+                .nombre(cargoEnsamblar.getNombre())
+                .activo(cargoEnsamblar.getActivo())
+                .build();
+    }
 
-		return CargoEntidad.builder()
-				.codigoCargo(cargoEnsamblar.getCodigoCargo())
-				.nombre(cargoEnsamblar.getNombre())
-				.estado(cargoEnsamblar.getEstado())
-				.build();
-	}
+    @Override
+    public CargoDominio ensamblarDominio(final CargoEntidad entidad) {
+        var cargoEnsamblar = UtilObjeto.obtenerValorDefecto(
+                entidad,
+                CargoEntidad.builder().build());
 
-	@Override
-	public CargoDominio ensamblarDominio(final CargoEntidad entidad) {
-		var cargoEnsamblar = entidad == null ? CargoEntidad.builder().build() : entidad;
-
-		return CargoDominio.builder()
-				.codigoCargo(cargoEnsamblar.getCodigoCargo())
-				.nombre(cargoEnsamblar.getNombre())
-				.estado(cargoEnsamblar.getEstado())
-				.build();
-	}
+        return CargoDominio.builder()
+                .codigoCargo(cargoEnsamblar.getCodigoCargo())
+                .nombre(cargoEnsamblar.getNombre())
+                .activo(cargoEnsamblar.getActivo())
+                .build();
+    }
 }
