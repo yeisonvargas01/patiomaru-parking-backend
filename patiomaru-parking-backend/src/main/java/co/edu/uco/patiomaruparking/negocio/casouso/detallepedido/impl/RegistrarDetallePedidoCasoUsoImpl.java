@@ -1,6 +1,10 @@
 package co.edu.uco.patiomaruparking.negocio.casouso.detallepedido.impl;
 
 import java.math.BigDecimal;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import co.edu.uco.patiomaruparking.datos.dao.sql.factoria.DAOFactory;
 import co.edu.uco.patiomaruparking.entidad.DetallePedidoEntidad;
@@ -15,134 +19,212 @@ import co.edu.uco.patiomaruparking.negocio.dominio.PlatoDominio;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilCodigo;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.excepcion.NegocioPatioMaruExcepcion;
+import co.edu.uco.patiomaruparking.transversal.utilitario.excepcion.TransversalPatioMaruExcepcion;
 
 public final class RegistrarDetallePedidoCasoUsoImpl implements RegistrarDetallePedidoCasoUso {
 
+	private static final Logger logger = LoggerFactory.getLogger(RegistrarDetallePedidoCasoUsoImpl.class);
+
+	private static final String PREFIJO_PEDIDO = "PEDD";
 	private static final int LONGITUD_CODIGO_PEDIDO = 7;
-	private static final String ESTADO_CANCELADO = "CANCELADO";
-	private static final String ESTADO_ENTREGADO = "ENTREGADO";
+	private static final int POSICION_INICIO_DIGITOS_PEDIDO = 4;
+
+	private static final String PREFIJO_DETALLE_PEDIDO = "DP";
+	private static final int CANTIDAD_DIGITOS_DETALLE_PEDIDO = 3;
+
+	private static final String PREFIJO_PLATO = "PLT";
+	private static final int LONGITUD_CODIGO_PLATO = 6;
+	private static final int POSICION_INICIO_DIGITOS_PLATO = 3;
+
+	private static final int CANTIDAD_MINIMA_PERMITIDA = 1;
+
+	private static final String ESTADO_REGISTRADO = "Registrado";
 
 	private final DAOFactory daoFactory;
 
 	public RegistrarDetallePedidoCasoUsoImpl(final DAOFactory daoFactory) {
+		if (UtilObjeto.esNulo(daoFactory)) {
+			throw TransversalPatioMaruExcepcion.crear(
+					"No fue posible crear el caso de uso para registrar detalle de pedido porque la fábrica de datos es obligatoria.");
+		}
+
 		this.daoFactory = daoFactory;
 	}
 
 	@Override
 	public DetallePedidoDominio ejecutar(final DetallePedidoDominio datos) {
+		logger.info("Iniciando el registro de un detalle de pedido.");
 
-		// 1. Validación de datos consistentes:
-		// tipo de dato, longitud, obligatoriedad, formato y rango.
-		validarDatosConsistentes(datos);
+		var detalle = UtilObjeto.obtenerValorDefecto(
+				datos,
+				DetallePedidoDominio.builder().build());
 
-		// 2. Debe existir el pedido al que pertenece el detalle.
-		var pedido = validarYObtenerPedido(datos.getCodigoPedido());
+		validarDatosConsistentes(detalle);
 
-		// 3. No se debe registrar un detalle en un pedido cancelado o entregado.
+		var codigoPedido = UtilTexto.aplicarTrim(detalle.getCodigoPedido());
+
+		var pedido = validarYObtenerPedido(codigoPedido);
+
 		validarPedidoPermiteRegistrarDetalle(pedido);
 
-		// 4. Debe existir el plato asociado al detalle y debe estar disponible.
-		var plato = validarYObtenerPlato(datos);
+		var plato = validarYObtenerPlato(detalle);
 
-		// 5. No debe existir un detalle con la misma combinación única documentada:
-		// pedido + plato.
-		validarNoExisteDetalleConMismoPedidoYPlato(datos.getCodigoPedido(), plato.getCodigoPlato());
+		validarNoExisteDetalleConMismoPedidoYPlato(
+				codigoPedido,
+				plato.getCodigoPlato());
 
-		// 6. El código del detalle del pedido debe ser único.
 		var codigoDetallePedido = generarCodigoUnicoDetallePedido();
 
-		// 7. Cálculo de valores:
-		// subtotal = cantidad * precioVenta del plato.
-		var subtotal = calcularSubtotal(datos.getCantidad(), plato.getPrecioVenta());
+		var cantidad = obtenerCantidad(detalle);
+
+		var subtotal = calcularSubtotal(
+				cantidad,
+				plato.getPrecioVenta());
 
 		var detallePreparado = DetallePedidoDominio.builder()
 				.codigoDetallePedido(codigoDetallePedido)
-				.codigoPedido(UtilTexto.aplicarTrim(datos.getCodigoPedido()))
-				.cantidad(datos.getCantidad())
+				.codigoPedido(codigoPedido)
+				.cantidad(cantidad)
 				.plato(plato)
 				.subtotal(subtotal)
 				.build();
 
 		guardar(detallePreparado);
 
+		logger.info("Detalle de pedido registrado satisfactoriamente.");
+
 		return detallePreparado;
 	}
 
-	private void validarDatosConsistentes(final DetallePedidoDominio datos) {
-		if (UtilObjeto.esNulo(datos)) {
-			throw new RuntimeException("Los datos del detalle del pedido son obligatorios.");
+	private void validarDatosConsistentes(final DetallePedidoDominio detalle) {
+		validarCodigoPedido(detalle.getCodigoPedido());
+		validarCantidad(detalle);
+		validarPlato(detalle);
+	}
+
+	private void validarCodigoPedido(final String codigoPedido) {
+		if (!UtilTexto.tieneTexto(codigoPedido)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del pedido es obligatorio para registrar el detalle.");
 		}
 
-		if (!UtilTexto.tieneTexto(datos.getCodigoPedido())) {
-			throw new RuntimeException("El código del pedido es obligatorio para registrar el detalle.");
+		var codigoPedidoNormalizado = UtilTexto.aplicarTrim(codigoPedido);
+
+		if (codigoPedidoNormalizado.length() != LONGITUD_CODIGO_PEDIDO) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del pedido debe tener exactamente "
+							+ LONGITUD_CODIGO_PEDIDO + " caracteres.");
 		}
 
-		if (UtilTexto.aplicarTrim(datos.getCodigoPedido()).length() != LONGITUD_CODIGO_PEDIDO) {
-			throw new RuntimeException("El código del pedido debe tener exactamente "
-					+ LONGITUD_CODIGO_PEDIDO + " caracteres.");
+		if (!codigoPedidoNormalizado.startsWith(PREFIJO_PEDIDO)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del pedido debe iniciar con " + PREFIJO_PEDIDO + ".");
 		}
 
-		if (UtilObjeto.esNulo(datos.getCantidad())) {
-			throw new RuntimeException("La cantidad del detalle del pedido es obligatoria.");
+		if (!contieneSoloDigitos(codigoPedidoNormalizado.substring(POSICION_INICIO_DIGITOS_PEDIDO))) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del pedido debe tener el formato PEDD seguido de tres dígitos numéricos.");
+		}
+	}
+
+	private void validarCantidad(final DetallePedidoDominio detalle) {
+		var cantidad = obtenerCantidad(detalle);
+
+		if (cantidad < CANTIDAD_MINIMA_PERMITIDA) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"La cantidad del detalle del pedido debe ser mayor que cero.");
+		}
+	}
+
+	private Integer obtenerCantidad(final DetallePedidoDominio detalle) {
+		return UtilObjeto.obtenerValorDefecto(
+				detalle.getCantidad(),
+				0);
+	}
+
+	private void validarPlato(final DetallePedidoDominio detalle) {
+		if (!UtilTexto.tieneTexto(detalle.getPlato().getCodigoPlato())) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El plato del detalle del pedido es obligatorio.");
 		}
 
-		if (datos.getCantidad() <= 0) {
-			throw new RuntimeException("La cantidad del detalle del pedido debe ser mayor que cero.");
+		var codigoPlato = UtilTexto.aplicarTrim(
+				detalle.getPlato().getCodigoPlato());
+
+		if (codigoPlato.length() != LONGITUD_CODIGO_PLATO) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del plato debe tener exactamente "
+							+ LONGITUD_CODIGO_PLATO + " caracteres.");
 		}
 
-		if (UtilObjeto.esNulo(datos.getPlato())
-				|| !UtilTexto.tieneTexto(datos.getPlato().getCodigoPlato())) {
-			throw new RuntimeException("El plato del detalle del pedido es obligatorio.");
+		if (!codigoPlato.startsWith(PREFIJO_PLATO)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del plato debe iniciar con " + PREFIJO_PLATO + ".");
+		}
+
+		if (!contieneSoloDigitos(codigoPlato.substring(POSICION_INICIO_DIGITOS_PLATO))) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del plato debe tener el formato PLT seguido de tres dígitos numéricos.");
 		}
 	}
 
 	private PedidoDominio validarYObtenerPedido(final String codigoPedido) {
-		var codigoPedidoNormalizado = UtilTexto.aplicarTrim(codigoPedido);
+		var pedidoEntidad = daoFactory.obtenerPedidoDAO()
+				.consultarPorId(codigoPedido);
 
-		var pedidoEntidad = daoFactory.obtenerPedidoDAO().consultarPorId(codigoPedidoNormalizado);
+		if (UtilObjeto.esNulo(pedidoEntidad)
+				|| UtilTexto.esVacio(pedidoEntidad.getCodigoPedido())) {
 
-		if (UtilObjeto.esNulo(pedidoEntidad)) {
-			throw new RuntimeException("No existe un pedido registrado con el código indicado.");
+			throw NegocioPatioMaruExcepcion.crear(
+					"No existe un pedido registrado con el código indicado.");
 		}
 
-		return PedidoEntidadAssembler.getInstance().ensamblarDominio(pedidoEntidad);
+		return PedidoEntidadAssembler.getInstance()
+				.ensamblarDominio(pedidoEntidad);
 	}
 
 	private void validarPedidoPermiteRegistrarDetalle(final PedidoDominio pedido) {
-		var estadoPedido = UtilTexto.aplicarTrimConvertirMayusculas(pedido.getEstado());
-
-		if (UtilTexto.sonIgualesIgnorandoMayusculas(estadoPedido, ESTADO_CANCELADO)) {
-			throw new RuntimeException("No es posible registrar detalles en un pedido cancelado.");
-		}
-
-		if (UtilTexto.sonIgualesIgnorandoMayusculas(estadoPedido, ESTADO_ENTREGADO)) {
-			throw new RuntimeException("No es posible registrar detalles en un pedido entregado.");
+		if (!UtilTexto.sonIgualesIgnorandoMayusculas(pedido.getEstado(), ESTADO_REGISTRADO)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El pedido no permite registrar nuevos detalles porque su estado actual no es Registrado.");
 		}
 	}
 
-	private PlatoDominio validarYObtenerPlato(final DetallePedidoDominio datos) {
-		var codigoPlato = UtilTexto.aplicarTrim(datos.getPlato().getCodigoPlato());
+	private PlatoDominio validarYObtenerPlato(final DetallePedidoDominio detalle) {
+		var codigoPlato = UtilTexto.aplicarTrim(
+				detalle.getPlato().getCodigoPlato());
 
-		var platoEntidad = daoFactory.obtenerPlatoDAO().consultarPorId(codigoPlato);
+		var platoEntidad = daoFactory.obtenerPlatoDAO()
+				.consultarPorId(codigoPlato);
 
-		if (UtilObjeto.esNulo(platoEntidad)) {
-			throw new RuntimeException("No existe un plato registrado con el código indicado.");
+		if (UtilObjeto.esNulo(platoEntidad)
+				|| UtilTexto.esVacio(platoEntidad.getCodigoPlato())) {
+
+			throw NegocioPatioMaruExcepcion.crear(
+					"No existe un plato registrado con el código indicado.");
 		}
 
-		var plato = PlatoEntidadAssembler.getInstance().ensamblarDominio(platoEntidad);
+		var plato = PlatoEntidadAssembler.getInstance()
+				.ensamblarDominio(platoEntidad);
 
 		if (!plato.estaDisponible()) {
-			throw new RuntimeException("El plato " + plato.getNombre() + " no se encuentra disponible.");
+			throw NegocioPatioMaruExcepcion.crear(
+					"El plato " + plato.getNombre() + " no se encuentra disponible.");
 		}
 
 		if (!plato.tienePrecioVentaValido()) {
-			throw new RuntimeException("El plato " + plato.getNombre() + " no tiene un precio de venta válido.");
+			throw NegocioPatioMaruExcepcion.crear(
+					"El plato " + plato.getNombre() + " no tiene un precio de venta válido.");
 		}
 
 		return plato;
 	}
 
-	private void validarNoExisteDetalleConMismoPedidoYPlato(final String codigoPedido, final String codigoPlato) {
+	private void validarNoExisteDetalleConMismoPedidoYPlato(
+			final String codigoPedido,
+			final String codigoPlato) {
+
 		var filtro = DetallePedidoEntidad.builder()
 				.codigoPedido(UtilTexto.aplicarTrim(codigoPedido))
 				.plato(PlatoEntidad.builder()
@@ -150,20 +232,34 @@ public final class RegistrarDetallePedidoCasoUsoImpl implements RegistrarDetalle
 						.build())
 				.build();
 
-		var resultados = daoFactory.obtenerDetallePedidoDAO().consultar(filtro);
+		var resultados = UtilObjeto.obtenerValorDefecto(
+				daoFactory.obtenerDetallePedidoDAO().consultar(filtro),
+				List.<DetallePedidoEntidad>of());
 
-		if (UtilObjeto.noEsNulo(resultados) && !resultados.isEmpty()) {
-			throw new RuntimeException("Ya existe un detalle registrado para el mismo pedido y el mismo plato.");
+		if (!resultados.isEmpty()) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"Ya existe un detalle registrado para el mismo pedido y el mismo plato.");
 		}
 	}
 
-	private BigDecimal calcularSubtotal(final Integer cantidad, final BigDecimal precioVenta) {
-		return precioVenta.multiply(BigDecimal.valueOf(cantidad));
+	private BigDecimal calcularSubtotal(
+			final Integer cantidad,
+			final BigDecimal precioVenta) {
+
+		var precioVentaSeguro = UtilObjeto.obtenerValorDefecto(
+				precioVenta,
+				BigDecimal.ZERO);
+
+		return precioVentaSeguro.multiply(
+				BigDecimal.valueOf(cantidad));
 	}
 
 	private void guardar(final DetallePedidoDominio detalle) {
-		var detalleEntidad = DetallePedidoEntidadAssembler.getInstance().ensamblarEntidad(detalle);
-		daoFactory.obtenerDetallePedidoDAO().registrar(detalleEntidad);
+		var detalleEntidad = DetallePedidoEntidadAssembler.getInstance()
+				.ensamblarEntidad(detalle);
+
+		daoFactory.obtenerDetallePedidoDAO()
+				.registrar(detalleEntidad);
 	}
 
 	private String generarCodigoUnicoDetallePedido() {
@@ -171,10 +267,28 @@ public final class RegistrarDetallePedidoCasoUsoImpl implements RegistrarDetalle
 		DetallePedidoEntidad detalleExistente;
 
 		do {
-			codigoDetallePedido = UtilCodigo.generarCodigo("DP");
-			detalleExistente = daoFactory.obtenerDetallePedidoDAO().consultarPorId(codigoDetallePedido);
-		} while (UtilObjeto.noEsNulo(detalleExistente));
+			codigoDetallePedido = UtilCodigo.generarCodigo(
+					PREFIJO_DETALLE_PEDIDO,
+					CANTIDAD_DIGITOS_DETALLE_PEDIDO);
+
+			detalleExistente = daoFactory.obtenerDetallePedidoDAO()
+					.consultarPorId(codigoDetallePedido);
+
+		} while (UtilObjeto.noEsNulo(detalleExistente)
+				&& UtilTexto.tieneTexto(detalleExistente.getCodigoDetallePedido()));
 
 		return codigoDetallePedido;
+	}
+
+	private boolean contieneSoloDigitos(final String valor) {
+		var valorSeguro = UtilTexto.aplicarTrim(valor);
+
+		for (int indice = 0; indice < valorSeguro.length(); indice++) {
+			if (!Character.isDigit(valorSeguro.charAt(indice))) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 }

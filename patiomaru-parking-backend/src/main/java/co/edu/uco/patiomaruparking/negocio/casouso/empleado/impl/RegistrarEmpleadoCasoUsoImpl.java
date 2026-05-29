@@ -2,6 +2,10 @@ package co.edu.uco.patiomaruparking.negocio.casouso.empleado.impl;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import co.edu.uco.patiomaruparking.datos.dao.sql.factoria.DAOFactory;
 import co.edu.uco.patiomaruparking.entidad.EmpleadoEntidad;
@@ -12,209 +16,345 @@ import co.edu.uco.patiomaruparking.negocio.dominio.EmpleadoDominio;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilCodigo;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.excepcion.NegocioPatioMaruExcepcion;
+import co.edu.uco.patiomaruparking.transversal.utilitario.excepcion.TransversalPatioMaruExcepcion;
 
 public final class RegistrarEmpleadoCasoUsoImpl implements RegistrarEmpleadoCasoUso {
 
+	private static final Logger logger = LoggerFactory.getLogger(RegistrarEmpleadoCasoUsoImpl.class);
+
+	private static final String PREFIJO_EMPLEADO = "EMP";
+	private static final int CANTIDAD_DIGITOS_EMPLEADO = 3;
 	private static final int LONGITUD_CODIGO_EMPLEADO = 6;
+
+	private static final int LONGITUD_MINIMA_NUMERO_IDENTIFICACION = 6;
 	private static final int LONGITUD_MAXIMA_NUMERO_IDENTIFICACION = 15;
+
+	private static final int LONGITUD_MINIMA_NOMBRE = 2;
 	private static final int LONGITUD_MAXIMA_NOMBRE = 40;
+
+	private static final int LONGITUD_MINIMA_APELLIDO = 2;
 	private static final int LONGITUD_MAXIMA_APELLIDO = 40;
+
+	private static final int LONGITUD_MINIMA_TELEFONO = 10;
 	private static final int LONGITUD_MAXIMA_TELEFONO = 15;
+
+	private static final int LONGITUD_MINIMA_CORREO_ELECTRONICO = 5;
 	private static final int LONGITUD_MAXIMA_CORREO_ELECTRONICO = 100;
+
+	private static final int LONGITUD_MINIMA_DIRECCION_RESIDENCIA = 5;
 	private static final int LONGITUD_MAXIMA_DIRECCION_RESIDENCIA = 120;
+
 	private static final int LONGITUD_CODIGO_TIPO_DOCUMENTO_IDENTIFICACION = 7;
 	private static final int LONGITUD_CODIGO_CARGO = 6;
 	private static final int LONGITUD_CODIGO_CIUDAD_RESIDENCIA = 6;
 
+	private static final int EDAD_MINIMA_EMPLEADO = 18;
+
+	private static final boolean ESTADO_EMPLEADO_ACTIVO = true;
+
 	private final DAOFactory daoFactory;
 
 	public RegistrarEmpleadoCasoUsoImpl(final DAOFactory daoFactory) {
+		if (UtilObjeto.esNulo(daoFactory)) {
+			throw TransversalPatioMaruExcepcion.crear(
+					"No fue posible crear el caso de uso para registrar empleado porque la fábrica de datos es obligatoria.");
+		}
+
 		this.daoFactory = daoFactory;
 	}
 
 	@Override
 	public EmpleadoDominio ejecutar(final EmpleadoDominio datos) {
+		logger.info("Iniciando el registro de un empleado.");
 
-		// 1. Validación de datos consistentes:
-		// tipo de dato, longitud, obligatoriedad, formato y rango.
-		validarDatosConsistentes(datos);
+		var empleado = UtilObjeto.obtenerValorDefecto(
+				datos,
+				EmpleadoDominio.builder().build());
 
-		// 2. No debe existir un empleado con la misma combinación única documentada:
-		// tipoDocumentoIdentificacion + numeroIdentificacion.
-		validarNoExisteEmpleadoConMismoTipoDocumentoYNumeroIdentificacion(datos);
+		validarDatosConsistentes(empleado);
 
-		// 3. No debe existir un empleado con el mismo número de teléfono.
-		validarNoExisteEmpleadoConMismoNumeroTelefono(datos.getNumeroTelefono());
+		validarNoExisteEmpleadoConMismoTipoDocumentoYNumeroIdentificacion(empleado);
+		validarNoExisteEmpleadoConMismoNumeroTelefono(empleado.getNumeroTelefono());
+		validarNoExisteEmpleadoConMismoCorreoElectronico(empleado.getCorreoElectronico());
 
-		// 4. No debe existir un empleado con el mismo correo electrónico.
-		validarNoExisteEmpleadoConMismoCorreoElectronico(datos.getCorreoElectronico());
-
-		// 5. El código del empleado debe ser único.
 		var codigoEmpleado = generarCodigoUnicoEmpleado();
 
 		var empleadoPreparado = EmpleadoDominio.builder()
 				.codigoEmpleado(codigoEmpleado)
-				.numeroIdentificacion(UtilTexto.aplicarTrim(datos.getNumeroIdentificacion()))
-				.primerNombre(UtilTexto.aplicarTrim(datos.getPrimerNombre()))
-				.segundoNombre(UtilTexto.aplicarTrim(datos.getSegundoNombre()))
-				.primerApellido(UtilTexto.aplicarTrim(datos.getPrimerApellido()))
-				.segundoApellido(UtilTexto.aplicarTrim(datos.getSegundoApellido()))
-				.fechaNacimiento(datos.getFechaNacimiento())
-				.edad(calcularEdad(datos.getFechaNacimiento()))
-				.estado(datos.getEstado())
-				.numeroTelefono(UtilTexto.aplicarTrim(datos.getNumeroTelefono()))
-				.correoElectronico(UtilTexto.aplicarTrimConvertirMayusculas(datos.getCorreoElectronico()))
-				.direccionResidencia(UtilTexto.aplicarTrim(datos.getDireccionResidencia()))
-				.tipoDocumentoIdentificacion(datos.getTipoDocumentoIdentificacion())
-				.cargo(datos.getCargo())
-				.ciudadResidencia(datos.getCiudadResidencia())
+				.numeroIdentificacion(UtilTexto.aplicarTrim(empleado.getNumeroIdentificacion()))
+				.primerNombre(UtilTexto.aplicarTrim(empleado.getPrimerNombre()))
+				.segundoNombre(UtilTexto.aplicarTrim(empleado.getSegundoNombre()))
+				.primerApellido(UtilTexto.aplicarTrim(empleado.getPrimerApellido()))
+				.segundoApellido(UtilTexto.aplicarTrim(empleado.getSegundoApellido()))
+				.fechaNacimiento(empleado.getFechaNacimiento())
+				.edad(calcularEdad(empleado.getFechaNacimiento()))
+				.estado(ESTADO_EMPLEADO_ACTIVO)
+				.numeroTelefono(UtilTexto.aplicarTrim(empleado.getNumeroTelefono()))
+				.correoElectronico(UtilTexto.aplicarTrim(empleado.getCorreoElectronico()))
+				.direccionResidencia(UtilTexto.aplicarTrim(empleado.getDireccionResidencia()))
+				.tipoDocumentoIdentificacion(empleado.getTipoDocumentoIdentificacion())
+				.cargo(empleado.getCargo())
+				.ciudadResidencia(empleado.getCiudadResidencia())
 				.build();
 
 		guardar(empleadoPreparado);
 
+		logger.info("Empleado registrado satisfactoriamente.");
+
 		return empleadoPreparado;
 	}
 
-	private void validarDatosConsistentes(final EmpleadoDominio datos) {
-		if (UtilObjeto.esNulo(datos)) {
-			throw new RuntimeException("Los datos del empleado son obligatorios.");
-		}
+	private void validarDatosConsistentes(final EmpleadoDominio empleado) {
+		validarNumeroIdentificacion(empleado.getNumeroIdentificacion());
 
-		validarTextoObligatorio(datos.getNumeroIdentificacion(), "El número de identificación",
-				LONGITUD_MAXIMA_NUMERO_IDENTIFICACION);
+		validarTextoObligatorio(
+				empleado.getPrimerNombre(),
+				"El primer nombre",
+				LONGITUD_MINIMA_NOMBRE,
+				LONGITUD_MAXIMA_NOMBRE);
 
-		validarTextoObligatorio(datos.getPrimerNombre(), "El primer nombre", LONGITUD_MAXIMA_NOMBRE);
-		validarTextoObligatorio(datos.getSegundoNombre(), "El segundo nombre", LONGITUD_MAXIMA_NOMBRE);
-		validarTextoObligatorio(datos.getPrimerApellido(), "El primer apellido", LONGITUD_MAXIMA_APELLIDO);
-		validarTextoObligatorio(datos.getSegundoApellido(), "El segundo apellido", LONGITUD_MAXIMA_APELLIDO);
+		validarTextoOpcional(
+				empleado.getSegundoNombre(),
+				"El segundo nombre",
+				LONGITUD_MINIMA_NOMBRE,
+				LONGITUD_MAXIMA_NOMBRE);
 
-		if (UtilObjeto.esNulo(datos.getFechaNacimiento())) {
-			throw new RuntimeException("La fecha de nacimiento del empleado es obligatoria.");
-		}
+		validarTextoObligatorio(
+				empleado.getPrimerApellido(),
+				"El primer apellido",
+				LONGITUD_MINIMA_APELLIDO,
+				LONGITUD_MAXIMA_APELLIDO);
 
-		if (datos.getFechaNacimiento().isAfter(LocalDate.now())) {
-			throw new RuntimeException("La fecha de nacimiento del empleado no puede ser futura.");
-		}
+		validarTextoOpcional(
+				empleado.getSegundoApellido(),
+				"El segundo apellido",
+				LONGITUD_MINIMA_APELLIDO,
+				LONGITUD_MAXIMA_APELLIDO);
 
-		if (calcularEdad(datos.getFechaNacimiento()) < 18) {
-			throw new RuntimeException("El empleado debe ser mayor de edad.");
-		}
+		validarFechaNacimiento(empleado.getFechaNacimiento());
+		validarNumeroTelefono(empleado.getNumeroTelefono());
+		validarCorreoElectronico(empleado.getCorreoElectronico());
 
-		if (UtilObjeto.esNulo(datos.getEstado())) {
-			throw new RuntimeException("El estado del empleado es obligatorio.");
-		}
-
-		validarTextoObligatorio(datos.getNumeroTelefono(), "El número de teléfono", LONGITUD_MAXIMA_TELEFONO);
-		validarTextoObligatorio(datos.getCorreoElectronico(), "El correo electrónico",
-				LONGITUD_MAXIMA_CORREO_ELECTRONICO);
-		validarFormatoCorreoElectronico(datos.getCorreoElectronico());
-
-		validarTextoObligatorio(datos.getDireccionResidencia(), "La dirección de residencia",
+		validarTextoObligatorio(
+				empleado.getDireccionResidencia(),
+				"La dirección de residencia",
+				LONGITUD_MINIMA_DIRECCION_RESIDENCIA,
 				LONGITUD_MAXIMA_DIRECCION_RESIDENCIA);
 
-		validarTipoDocumentoIdentificacion(datos);
-		validarCargo(datos);
-		validarCiudadResidencia(datos);
+		validarTipoDocumentoIdentificacion(empleado);
+		validarCargo(empleado);
+		validarCiudadResidencia(empleado);
 	}
 
-	private void validarTextoObligatorio(final String valor, final String nombreCampo, final int longitudMaxima) {
+	private void validarNumeroIdentificacion(final String numeroIdentificacion) {
+		validarTextoObligatorio(
+				numeroIdentificacion,
+				"El número de identificación",
+				LONGITUD_MINIMA_NUMERO_IDENTIFICACION,
+				LONGITUD_MAXIMA_NUMERO_IDENTIFICACION);
+
+		if (!contieneSoloDigitos(numeroIdentificacion)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El número de identificación del empleado solo debe contener dígitos.");
+		}
+	}
+
+	private void validarNumeroTelefono(final String numeroTelefono) {
+		validarTextoObligatorio(
+				numeroTelefono,
+				"El número de teléfono",
+				LONGITUD_MINIMA_TELEFONO,
+				LONGITUD_MAXIMA_TELEFONO);
+
+		if (!contieneSoloDigitos(numeroTelefono)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El número de teléfono del empleado solo debe contener dígitos.");
+		}
+	}
+
+	private void validarCorreoElectronico(final String correoElectronico) {
+		validarTextoObligatorio(
+				correoElectronico,
+				"El correo electrónico",
+				LONGITUD_MINIMA_CORREO_ELECTRONICO,
+				LONGITUD_MAXIMA_CORREO_ELECTRONICO);
+
+		if (!tieneFormatoBasicoCorreoElectronico(correoElectronico)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El correo electrónico del empleado no tiene un formato válido.");
+		}
+	}
+
+	private void validarFechaNacimiento(final LocalDate fechaNacimiento) {
+		if (UtilObjeto.esNulo(fechaNacimiento)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"La fecha de nacimiento del empleado es obligatoria.");
+		}
+
+		if (fechaNacimiento.isAfter(LocalDate.now())) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"La fecha de nacimiento del empleado no puede ser futura.");
+		}
+
+		if (calcularEdad(fechaNacimiento) < EDAD_MINIMA_EMPLEADO) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El empleado debe ser mayor de edad.");
+		}
+	}
+
+	private void validarTextoObligatorio(
+			final String valor,
+			final String nombreCampo,
+			final int longitudMinima,
+			final int longitudMaxima) {
+
 		if (!UtilTexto.tieneTexto(valor)) {
-			throw new RuntimeException(nombreCampo + " del empleado es obligatorio.");
+			throw NegocioPatioMaruExcepcion.crear(
+					nombreCampo + " del empleado es obligatorio.");
 		}
 
-		if (UtilTexto.aplicarTrim(valor).length() > longitudMaxima) {
-			throw new RuntimeException(nombreCampo + " del empleado no puede superar "
-					+ longitudMaxima + " caracteres.");
+		validarLongitud(valor, nombreCampo, longitudMinima, longitudMaxima);
+	}
+
+	private void validarTextoOpcional(
+			final String valor,
+			final String nombreCampo,
+			final int longitudMinima,
+			final int longitudMaxima) {
+
+		if (!UtilTexto.tieneTexto(valor)) {
+			return;
+		}
+
+		validarLongitud(valor, nombreCampo, longitudMinima, longitudMaxima);
+	}
+
+	private void validarLongitud(
+			final String valor,
+			final String nombreCampo,
+			final int longitudMinima,
+			final int longitudMaxima) {
+
+		var valorSeguro = UtilTexto.aplicarTrim(valor);
+
+		if (valorSeguro.length() < longitudMinima || valorSeguro.length() > longitudMaxima) {
+			throw NegocioPatioMaruExcepcion.crear(
+					nombreCampo + " del empleado debe tener entre "
+							+ longitudMinima + " y " + longitudMaxima + " caracteres.");
 		}
 	}
 
-	private void validarTipoDocumentoIdentificacion(final EmpleadoDominio datos) {
-		if (UtilObjeto.esNulo(datos.getTipoDocumentoIdentificacion())
-				|| !UtilTexto.tieneTexto(datos.getTipoDocumentoIdentificacion()
-						.getCodigoTipoDocumentoIdentificacion())) {
-			throw new RuntimeException("El tipo de documento de identificación del empleado es obligatorio.");
+	private void validarTipoDocumentoIdentificacion(final EmpleadoDominio empleado) {
+		if (!UtilTexto.tieneTexto(
+				empleado.getTipoDocumentoIdentificacion().getCodigoTipoDocumentoIdentificacion())) {
+
+			throw NegocioPatioMaruExcepcion.crear(
+					"El tipo de documento de identificación del empleado es obligatorio.");
 		}
 
-		if (UtilTexto.aplicarTrim(datos.getTipoDocumentoIdentificacion()
-				.getCodigoTipoDocumentoIdentificacion()).length() != LONGITUD_CODIGO_TIPO_DOCUMENTO_IDENTIFICACION) {
-			throw new RuntimeException("El código del tipo de documento de identificación debe tener exactamente "
-					+ LONGITUD_CODIGO_TIPO_DOCUMENTO_IDENTIFICACION + " caracteres.");
+		validarLongitudExacta(
+				empleado.getTipoDocumentoIdentificacion().getCodigoTipoDocumentoIdentificacion(),
+				LONGITUD_CODIGO_TIPO_DOCUMENTO_IDENTIFICACION,
+				"El código del tipo de documento de identificación");
+	}
+
+	private void validarCargo(final EmpleadoDominio empleado) {
+		if (!UtilTexto.tieneTexto(empleado.getCargo().getCodigoCargo())) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El cargo del empleado es obligatorio.");
+		}
+
+		validarLongitudExacta(
+				empleado.getCargo().getCodigoCargo(),
+				LONGITUD_CODIGO_CARGO,
+				"El código del cargo");
+	}
+
+	private void validarCiudadResidencia(final EmpleadoDominio empleado) {
+		if (!UtilTexto.tieneTexto(empleado.getCiudadResidencia().getCodigoCiudadResidencia())) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"La ciudad de residencia del empleado es obligatoria.");
+		}
+
+		validarLongitudExacta(
+				empleado.getCiudadResidencia().getCodigoCiudadResidencia(),
+				LONGITUD_CODIGO_CIUDAD_RESIDENCIA,
+				"El código de la ciudad de residencia");
+	}
+
+	private void validarLongitudExacta(
+			final String valor,
+			final int longitudEsperada,
+			final String nombreCampo) {
+
+		if (UtilTexto.aplicarTrim(valor).length() != longitudEsperada) {
+			throw NegocioPatioMaruExcepcion.crear(
+					nombreCampo + " debe tener exactamente "
+							+ longitudEsperada + " caracteres.");
 		}
 	}
 
-	private void validarCargo(final EmpleadoDominio datos) {
-		if (UtilObjeto.esNulo(datos.getCargo())
-				|| !UtilTexto.tieneTexto(datos.getCargo().getCodigoCargo())) {
-			throw new RuntimeException("El cargo del empleado es obligatorio.");
-		}
-
-		if (UtilTexto.aplicarTrim(datos.getCargo().getCodigoCargo()).length() != LONGITUD_CODIGO_CARGO) {
-			throw new RuntimeException("El código del cargo debe tener exactamente "
-					+ LONGITUD_CODIGO_CARGO + " caracteres.");
-		}
-	}
-
-	private void validarCiudadResidencia(final EmpleadoDominio datos) {
-		if (UtilObjeto.esNulo(datos.getCiudadResidencia())
-				|| !UtilTexto.tieneTexto(datos.getCiudadResidencia().getCodigoCiudadResidencia())) {
-			throw new RuntimeException("La ciudad de residencia del empleado es obligatoria.");
-		}
-
-		if (UtilTexto.aplicarTrim(datos.getCiudadResidencia()
-				.getCodigoCiudadResidencia()).length() != LONGITUD_CODIGO_CIUDAD_RESIDENCIA) {
-			throw new RuntimeException("El código de la ciudad de residencia debe tener exactamente "
-					+ LONGITUD_CODIGO_CIUDAD_RESIDENCIA + " caracteres.");
-		}
-	}
-
-	private void validarFormatoCorreoElectronico(final String correoElectronico) {
-		var correo = UtilTexto.aplicarTrim(correoElectronico);
-
-		if (!correo.contains("@") || !correo.contains(".")) {
-			throw new RuntimeException("El correo electrónico del empleado no tiene un formato válido.");
-		}
-	}
-
-	private void validarNoExisteEmpleadoConMismoTipoDocumentoYNumeroIdentificacion(final EmpleadoDominio datos) {
+	private void validarNoExisteEmpleadoConMismoTipoDocumentoYNumeroIdentificacion(final EmpleadoDominio empleado) {
 		var filtro = EmpleadoEntidad.builder()
-				.numeroIdentificacion(UtilTexto.aplicarTrim(datos.getNumeroIdentificacion()))
+				.numeroIdentificacion(UtilTexto.aplicarTrim(empleado.getNumeroIdentificacion()))
 				.tipoDocumentoIdentificacion(TipoDocumentoIdentificacionEntidad.builder()
-						.codigoTipoDocumentoIdentificacion(UtilTexto.aplicarTrim(datos
-								.getTipoDocumentoIdentificacion()
-								.getCodigoTipoDocumentoIdentificacion()))
+						.codigoTipoDocumentoIdentificacion(UtilTexto.aplicarTrim(
+								empleado.getTipoDocumentoIdentificacion()
+										.getCodigoTipoDocumentoIdentificacion()))
 						.build())
 				.build();
 
-		var resultados = daoFactory.obtenerEmpleadoDAO().consultar(filtro);
+		var resultados = UtilObjeto.obtenerValorDefecto(
+				daoFactory.obtenerEmpleadoDAO().consultar(filtro),
+				List.<EmpleadoEntidad>of());
 
-		if (UtilObjeto.noEsNulo(resultados) && !resultados.isEmpty()) {
-			throw new RuntimeException(
+		if (!resultados.isEmpty()) {
+			throw NegocioPatioMaruExcepcion.crear(
 					"Ya existe un empleado registrado con el mismo tipo de documento y número de identificación.");
 		}
 	}
 
 	private void validarNoExisteEmpleadoConMismoNumeroTelefono(final String numeroTelefono) {
-		var filtro = EmpleadoEntidad.builder()
-				.numeroTelefono(UtilTexto.aplicarTrim(numeroTelefono))
-				.build();
+		var empleados = consultarTodosLosEmpleados();
 
-		var resultados = daoFactory.obtenerEmpleadoDAO().consultar(filtro);
+		for (EmpleadoEntidad empleado : empleados) {
+			var empleadoSeguro = UtilObjeto.obtenerValorDefecto(
+					empleado,
+					EmpleadoEntidad.builder().build());
 
-		if (UtilObjeto.noEsNulo(resultados) && !resultados.isEmpty()) {
-			throw new RuntimeException("Ya existe un empleado registrado con el mismo número de teléfono.");
+			if (UtilTexto.sonIgualesIgnorandoMayusculas(
+					empleadoSeguro.getNumeroTelefono(),
+					numeroTelefono)) {
+
+				throw NegocioPatioMaruExcepcion.crear(
+						"Ya existe un empleado registrado con el mismo número de teléfono.");
+			}
 		}
 	}
 
 	private void validarNoExisteEmpleadoConMismoCorreoElectronico(final String correoElectronico) {
-		var filtro = EmpleadoEntidad.builder()
-				.correoElectronico(UtilTexto.aplicarTrimConvertirMayusculas(correoElectronico))
-				.build();
+		var empleados = consultarTodosLosEmpleados();
 
-		var resultados = daoFactory.obtenerEmpleadoDAO().consultar(filtro);
+		for (EmpleadoEntidad empleado : empleados) {
+			var empleadoSeguro = UtilObjeto.obtenerValorDefecto(
+					empleado,
+					EmpleadoEntidad.builder().build());
 
-		if (UtilObjeto.noEsNulo(resultados) && !resultados.isEmpty()) {
-			throw new RuntimeException("Ya existe un empleado registrado con el mismo correo electrónico.");
+			if (UtilTexto.sonIgualesIgnorandoMayusculas(
+					empleadoSeguro.getCorreoElectronico(),
+					correoElectronico)) {
+
+				throw NegocioPatioMaruExcepcion.crear(
+						"Ya existe un empleado registrado con el mismo correo electrónico.");
+			}
 		}
+	}
+
+	private List<EmpleadoEntidad> consultarTodosLosEmpleados() {
+		return UtilObjeto.obtenerValorDefecto(
+				daoFactory.obtenerEmpleadoDAO().consultar(EmpleadoEntidad.builder().build()),
+				List.<EmpleadoEntidad>of());
 	}
 
 	private String generarCodigoUnicoEmpleado() {
@@ -222,16 +362,20 @@ public final class RegistrarEmpleadoCasoUsoImpl implements RegistrarEmpleadoCaso
 		EmpleadoEntidad empleadoExistente;
 
 		do {
-			codigoEmpleado = UtilCodigo.generarCodigo("EMP", 3);
+			codigoEmpleado = UtilCodigo.generarCodigo(
+					PREFIJO_EMPLEADO,
+					CANTIDAD_DIGITOS_EMPLEADO);
 
-			if (UtilTexto.aplicarTrim(codigoEmpleado).length() != LONGITUD_CODIGO_EMPLEADO) {
-				throw new RuntimeException("El código del empleado generado debe tener exactamente "
-						+ LONGITUD_CODIGO_EMPLEADO + " caracteres.");
-			}
+			validarLongitudExacta(
+					codigoEmpleado,
+					LONGITUD_CODIGO_EMPLEADO,
+					"El código del empleado generado");
 
-			empleadoExistente = daoFactory.obtenerEmpleadoDAO().consultarPorId(codigoEmpleado);
+			empleadoExistente = daoFactory.obtenerEmpleadoDAO()
+					.consultarPorId(codigoEmpleado);
 
-		} while (UtilObjeto.noEsNulo(empleadoExistente));
+		} while (UtilObjeto.noEsNulo(empleadoExistente)
+				&& UtilTexto.tieneTexto(empleadoExistente.getCodigoEmpleado()));
 
 		return codigoEmpleado;
 	}
@@ -241,7 +385,32 @@ public final class RegistrarEmpleadoCasoUsoImpl implements RegistrarEmpleadoCaso
 	}
 
 	private void guardar(final EmpleadoDominio empleado) {
-		var empleadoEntidad = EmpleadoEntidadAssembler.getInstance().ensamblarEntidad(empleado);
-		daoFactory.obtenerEmpleadoDAO().registrar(empleadoEntidad);
+		var empleadoEntidad = EmpleadoEntidadAssembler.getInstance()
+				.ensamblarEntidad(empleado);
+
+		daoFactory.obtenerEmpleadoDAO()
+				.registrar(empleadoEntidad);
+	}
+
+	private boolean contieneSoloDigitos(final String valor) {
+		var valorSeguro = UtilTexto.aplicarTrim(valor);
+
+		for (int indice = 0; indice < valorSeguro.length(); indice++) {
+			if (!Character.isDigit(valorSeguro.charAt(indice))) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private boolean tieneFormatoBasicoCorreoElectronico(final String correoElectronico) {
+		var correoSeguro = UtilTexto.aplicarTrim(correoElectronico);
+
+		return correoSeguro.contains("@")
+				&& correoSeguro.contains(".")
+				&& correoSeguro.indexOf("@") > 0
+				&& correoSeguro.lastIndexOf(".") > correoSeguro.indexOf("@") + 1
+				&& correoSeguro.lastIndexOf(".") < correoSeguro.length() - 1;
 	}
 }

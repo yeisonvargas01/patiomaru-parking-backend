@@ -1,5 +1,10 @@
 package co.edu.uco.patiomaruparking.negocio.casouso.cliente.impl;
 
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import co.edu.uco.patiomaruparking.datos.dao.sql.factoria.DAOFactory;
 import co.edu.uco.patiomaruparking.entidad.ClienteEntidad;
 import co.edu.uco.patiomaruparking.negocio.assembler.entidad.impl.ClienteEntidadAssembler;
@@ -7,128 +12,278 @@ import co.edu.uco.patiomaruparking.negocio.casouso.cliente.ActualizarClienteCaso
 import co.edu.uco.patiomaruparking.negocio.dominio.ClienteDominio;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.excepcion.NegocioPatioMaruExcepcion;
+import co.edu.uco.patiomaruparking.transversal.utilitario.excepcion.TransversalPatioMaruExcepcion;
 
 public final class ActualizarClienteCasoUsoImpl implements ActualizarClienteCasoUso {
 
+	private static final Logger logger = LoggerFactory.getLogger(ActualizarClienteCasoUsoImpl.class);
+
+	private static final String PREFIJO_CLIENTE = "CLI";
 	private static final int LONGITUD_CODIGO_CLIENTE = 6;
+	private static final int POSICION_INICIO_DIGITOS_CLIENTE = 3;
+
+	private static final int LONGITUD_MINIMA_NOMBRE = 2;
 	private static final int LONGITUD_MAXIMA_NOMBRE = 80;
+
+	private static final int LONGITUD_MINIMA_TELEFONO = 10;
 	private static final int LONGITUD_MAXIMA_TELEFONO = 15;
+
+	private static final int LONGITUD_MINIMA_CORREO_ELECTRONICO = 5;
 	private static final int LONGITUD_MAXIMA_CORREO_ELECTRONICO = 100;
 
 	private final DAOFactory daoFactory;
 
 	public ActualizarClienteCasoUsoImpl(final DAOFactory daoFactory) {
+		if (UtilObjeto.esNulo(daoFactory)) {
+			throw TransversalPatioMaruExcepcion.crear(
+					"No fue posible crear el caso de uso para actualizar cliente porque la fábrica de datos es obligatoria.");
+		}
+
 		this.daoFactory = daoFactory;
 	}
 
 	@Override
 	public void ejecutar(final ClienteDominio datos) {
+		logger.info("Iniciando la actualización de un cliente.");
 
-		// 1. Validación de datos consistentes:
-		// tipo de dato, longitud, obligatoriedad, formato y rango.
-		validarDatosConsistentes(datos);
+		var clienteActualizar = UtilObjeto.obtenerValorDefecto(
+				datos,
+				ClienteDominio.builder().build());
 
-		var codigoCliente = UtilTexto.aplicarTrim(datos.getCodigoCliente());
+		validarDatosConsistentes(clienteActualizar);
 
-		// 2. Debe existir el cliente que se desea actualizar.
-		var clienteActualEntidad = daoFactory.obtenerClienteDAO().consultarPorId(codigoCliente);
+		var codigoCliente = UtilTexto.aplicarTrim(
+				clienteActualizar.getCodigoCliente());
 
-		if (UtilObjeto.esNulo(clienteActualEntidad)) {
-			throw new RuntimeException("No existe un cliente registrado con el código indicado.");
-		}
+		var clienteActual = validarYObtenerCliente(codigoCliente);
 
-		var clienteActual = ClienteEntidadAssembler.getInstance().ensamblarDominio(clienteActualEntidad);
+		validarNoExisteOtroClienteConMismoTelefono(
+				codigoCliente,
+				clienteActualizar.getTelefono());
 
-		// 3. No debe existir otro cliente con la misma combinación única documentada:
-		// nombre + teléfono.
-		validarNoExisteOtroClienteConMismoNombreYTelefono(datos);
+		validarNoExisteOtroClienteConMismoCorreoElectronico(
+				codigoCliente,
+				clienteActualizar.getCorreoElectronico());
 
-		// 4. Actualizar información del cliente.
 		var clienteActualizado = ClienteDominio.builder()
 				.codigoCliente(codigoCliente)
-				.nombre(UtilTexto.aplicarTrim(datos.getNombre()))
-				.telefono(UtilTexto.aplicarTrim(datos.getTelefono()))
-				.correoElectronico(UtilTexto.aplicarTrim(datos.getCorreoElectronico()))
+				.nombre(UtilTexto.aplicarTrim(clienteActualizar.getNombre()))
+				.telefono(UtilTexto.aplicarTrim(clienteActualizar.getTelefono()))
+				.correoElectronico(UtilTexto.aplicarTrim(clienteActualizar.getCorreoElectronico()))
 				.estado(clienteActual.getEstado())
 				.build();
 
 		actualizar(clienteActualizado);
+
+		logger.info("Cliente actualizado satisfactoriamente.");
 	}
 
-	private void validarDatosConsistentes(final ClienteDominio datos) {
-		if (UtilObjeto.esNulo(datos)) {
-			throw new RuntimeException("Los datos del cliente son obligatorios.");
-		}
-
-		if (!UtilTexto.tieneTexto(datos.getCodigoCliente())) {
-			throw new RuntimeException("El código del cliente es obligatorio.");
-		}
-
-		if (UtilTexto.aplicarTrim(datos.getCodigoCliente()).length() != LONGITUD_CODIGO_CLIENTE) {
-			throw new RuntimeException("El código del cliente debe tener exactamente "
-					+ LONGITUD_CODIGO_CLIENTE + " caracteres.");
-		}
-
-		if (!UtilTexto.tieneTexto(datos.getNombre())) {
-			throw new RuntimeException("El nombre del cliente es obligatorio.");
-		}
-
-		if (UtilTexto.aplicarTrim(datos.getNombre()).length() > LONGITUD_MAXIMA_NOMBRE) {
-			throw new RuntimeException("El nombre del cliente no puede superar "
-					+ LONGITUD_MAXIMA_NOMBRE + " caracteres.");
-		}
-
-		if (!UtilTexto.tieneTexto(datos.getTelefono())) {
-			throw new RuntimeException("El teléfono del cliente es obligatorio.");
-		}
-
-		if (UtilTexto.aplicarTrim(datos.getTelefono()).length() > LONGITUD_MAXIMA_TELEFONO) {
-			throw new RuntimeException("El teléfono del cliente no puede superar "
-					+ LONGITUD_MAXIMA_TELEFONO + " caracteres.");
-		}
-
-		if (!UtilTexto.tieneTexto(datos.getCorreoElectronico())) {
-			throw new RuntimeException("El correo electrónico del cliente es obligatorio.");
-		}
-
-		if (UtilTexto.aplicarTrim(datos.getCorreoElectronico()).length() > LONGITUD_MAXIMA_CORREO_ELECTRONICO) {
-			throw new RuntimeException("El correo electrónico del cliente no puede superar "
-					+ LONGITUD_MAXIMA_CORREO_ELECTRONICO + " caracteres.");
-		}
-
-		validarFormatoCorreoElectronico(datos.getCorreoElectronico());
+	private void validarDatosConsistentes(final ClienteDominio cliente) {
+		validarCodigoCliente(cliente.getCodigoCliente());
+		validarNombre(cliente.getNombre());
+		validarTelefono(cliente.getTelefono());
+		validarCorreoElectronicoSiFueInformado(cliente.getCorreoElectronico());
 	}
 
-	private void validarFormatoCorreoElectronico(final String correoElectronico) {
-		var correo = UtilTexto.aplicarTrim(correoElectronico);
+	private void validarCodigoCliente(final String codigoCliente) {
+		if (!UtilTexto.tieneTexto(codigoCliente)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del cliente es obligatorio.");
+		}
 
-		if (!correo.contains("@") || !correo.contains(".")) {
-			throw new RuntimeException("El correo electrónico del cliente no tiene un formato válido.");
+		var codigoClienteNormalizado = UtilTexto.aplicarTrim(codigoCliente);
+
+		if (codigoClienteNormalizado.length() != LONGITUD_CODIGO_CLIENTE) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del cliente debe tener exactamente "
+							+ LONGITUD_CODIGO_CLIENTE + " caracteres.");
+		}
+
+		if (!iniciaConPrefijoCliente(codigoClienteNormalizado)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del cliente debe iniciar con " + PREFIJO_CLIENTE + ".");
+		}
+
+		if (!contieneSoloDigitos(
+				codigoClienteNormalizado.substring(POSICION_INICIO_DIGITOS_CLIENTE))) {
+
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del cliente debe tener el formato CLI seguido de tres dígitos numéricos.");
 		}
 	}
 
-	private void validarNoExisteOtroClienteConMismoNombreYTelefono(final ClienteDominio datos) {
-		var filtro = ClienteEntidad.builder()
-				.nombre(UtilTexto.aplicarTrim(datos.getNombre()))
-				.telefono(UtilTexto.aplicarTrim(datos.getTelefono()))
-				.build();
+	private void validarNombre(final String nombre) {
+		if (!UtilTexto.tieneTexto(nombre)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El nombre del cliente es obligatorio.");
+		}
 
-		var resultados = daoFactory.obtenerClienteDAO().consultar(filtro);
+		validarLongitud(
+				nombre,
+				LONGITUD_MINIMA_NOMBRE,
+				LONGITUD_MAXIMA_NOMBRE,
+				"El nombre del cliente");
+	}
 
-		if (UtilObjeto.esNulo(resultados) || resultados.isEmpty()) {
+	private void validarTelefono(final String telefono) {
+		if (!UtilTexto.tieneTexto(telefono)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El número de teléfono del cliente es obligatorio.");
+		}
+
+		validarLongitud(
+				telefono,
+				LONGITUD_MINIMA_TELEFONO,
+				LONGITUD_MAXIMA_TELEFONO,
+				"El número de teléfono del cliente");
+
+		if (!contieneSoloDigitos(telefono)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El número de teléfono del cliente solo debe contener dígitos.");
+		}
+	}
+
+	private void validarCorreoElectronicoSiFueInformado(final String correoElectronico) {
+		if (!UtilTexto.tieneTexto(correoElectronico)) {
 			return;
 		}
 
+		validarLongitud(
+				correoElectronico,
+				LONGITUD_MINIMA_CORREO_ELECTRONICO,
+				LONGITUD_MAXIMA_CORREO_ELECTRONICO,
+				"El correo electrónico del cliente");
+
+		if (!tieneFormatoBasicoCorreoElectronico(correoElectronico)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El correo electrónico del cliente no tiene un formato válido.");
+		}
+	}
+
+	private void validarLongitud(
+			final String valor,
+			final int longitudMinima,
+			final int longitudMaxima,
+			final String nombreCampo) {
+
+		var valorSeguro = UtilTexto.aplicarTrim(valor);
+
+		if (valorSeguro.length() < longitudMinima || valorSeguro.length() > longitudMaxima) {
+			throw NegocioPatioMaruExcepcion.crear(
+					nombreCampo + " debe tener entre " + longitudMinima + " y "
+							+ longitudMaxima + " caracteres.");
+		}
+	}
+
+	private ClienteDominio validarYObtenerCliente(final String codigoCliente) {
+		var clienteEntidad = daoFactory.obtenerClienteDAO()
+				.consultarPorId(codigoCliente);
+
+		if (UtilObjeto.esNulo(clienteEntidad)
+				|| !UtilTexto.tieneTexto(clienteEntidad.getCodigoCliente())) {
+
+			throw NegocioPatioMaruExcepcion.crear(
+					"No existe un cliente registrado con el código indicado.");
+		}
+
+		return ClienteEntidadAssembler.getInstance()
+				.ensamblarDominio(clienteEntidad);
+	}
+
+	private void validarNoExisteOtroClienteConMismoTelefono(
+			final String codigoCliente,
+			final String telefono) {
+
+		var filtro = ClienteEntidad.builder()
+				.telefono(UtilTexto.aplicarTrim(telefono))
+				.build();
+
+		var resultados = UtilObjeto.obtenerValorDefecto(
+				daoFactory.obtenerClienteDAO().consultar(filtro),
+				List.<ClienteEntidad>of());
+
 		for (ClienteEntidad cliente : resultados) {
+			var clienteSeguro = UtilObjeto.obtenerValorDefecto(
+					cliente,
+					ClienteEntidad.builder().build());
+
 			if (!UtilTexto.sonIgualesIgnorandoMayusculas(
-					cliente.getCodigoCliente(), datos.getCodigoCliente())) {
-				throw new RuntimeException("Ya existe otro cliente registrado con el mismo nombre y teléfono.");
+					clienteSeguro.getCodigoCliente(),
+					codigoCliente)) {
+
+				throw NegocioPatioMaruExcepcion.crear(
+						"Ya existe otro cliente registrado con el mismo número de teléfono.");
+			}
+		}
+	}
+
+	private void validarNoExisteOtroClienteConMismoCorreoElectronico(
+			final String codigoCliente,
+			final String correoElectronico) {
+
+		if (!UtilTexto.tieneTexto(correoElectronico)) {
+			return;
+		}
+
+		var filtro = ClienteEntidad.builder()
+				.correoElectronico(UtilTexto.aplicarTrim(correoElectronico))
+				.build();
+
+		var resultados = UtilObjeto.obtenerValorDefecto(
+				daoFactory.obtenerClienteDAO().consultar(filtro),
+				List.<ClienteEntidad>of());
+
+		for (ClienteEntidad cliente : resultados) {
+			var clienteSeguro = UtilObjeto.obtenerValorDefecto(
+					cliente,
+					ClienteEntidad.builder().build());
+
+			if (!UtilTexto.sonIgualesIgnorandoMayusculas(
+					clienteSeguro.getCodigoCliente(),
+					codigoCliente)) {
+
+				throw NegocioPatioMaruExcepcion.crear(
+						"Ya existe otro cliente registrado con el mismo correo electrónico.");
 			}
 		}
 	}
 
 	private void actualizar(final ClienteDominio cliente) {
-		var clienteEntidad = ClienteEntidadAssembler.getInstance().ensamblarEntidad(cliente);
-		daoFactory.obtenerClienteDAO().actualizar(clienteEntidad);
+		var clienteEntidad = ClienteEntidadAssembler.getInstance()
+				.ensamblarEntidad(cliente);
+
+		daoFactory.obtenerClienteDAO()
+				.actualizar(clienteEntidad);
+	}
+
+	private boolean iniciaConPrefijoCliente(final String codigoCliente) {
+		var prefijo = codigoCliente.substring(0, POSICION_INICIO_DIGITOS_CLIENTE);
+
+		return UtilTexto.sonIgualesIgnorandoMayusculas(
+				prefijo,
+				PREFIJO_CLIENTE);
+	}
+
+	private boolean contieneSoloDigitos(final String valor) {
+		var valorSeguro = UtilTexto.aplicarTrim(valor);
+
+		for (int indice = 0; indice < valorSeguro.length(); indice++) {
+			if (!Character.isDigit(valorSeguro.charAt(indice))) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private boolean tieneFormatoBasicoCorreoElectronico(final String correoElectronico) {
+		var correoSeguro = UtilTexto.aplicarTrim(correoElectronico);
+
+		return correoSeguro.contains("@")
+				&& correoSeguro.contains(".")
+				&& correoSeguro.indexOf("@") > 0
+				&& correoSeguro.lastIndexOf(".") > correoSeguro.indexOf("@") + 1
+				&& correoSeguro.lastIndexOf(".") < correoSeguro.length() - 1;
 	}
 }

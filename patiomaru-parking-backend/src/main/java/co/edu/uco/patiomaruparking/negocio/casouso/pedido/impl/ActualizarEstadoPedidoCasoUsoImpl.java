@@ -1,6 +1,7 @@
 package co.edu.uco.patiomaruparking.negocio.casouso.pedido.impl;
 
-import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import co.edu.uco.patiomaruparking.datos.dao.sql.factoria.DAOFactory;
 import co.edu.uco.patiomaruparking.negocio.assembler.entidad.impl.PedidoEntidadAssembler;
@@ -8,106 +9,194 @@ import co.edu.uco.patiomaruparking.negocio.casouso.pedido.ActualizarEstadoPedido
 import co.edu.uco.patiomaruparking.negocio.dominio.PedidoDominio;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.excepcion.NegocioPatioMaruExcepcion;
 
 public final class ActualizarEstadoPedidoCasoUsoImpl implements ActualizarEstadoPedidoCasoUso {
 
+	private static final Logger logger = LoggerFactory.getLogger(ActualizarEstadoPedidoCasoUsoImpl.class);
+
+	private static final String PREFIJO_PEDIDO = "PEDD";
 	private static final int LONGITUD_CODIGO_PEDIDO = 7;
+	private static final int POSICION_INICIO_DIGITOS_PEDIDO = 4;
 
-	private static final String ESTADO_CANCELADO = "CANCELADO";
+	private static final String ESTADO_REGISTRADO = "Registrado";
+	private static final String ESTADO_EN_PREPARACION = "En preparación";
+	private static final String ESTADO_PAGADO = "Pagado";
+	private static final String ESTADO_ENTREGADO = "Entregado";
+	private static final String ESTADO_CANCELADO = "Cancelado";
 
-	private static final Set<String> ESTADOS_PERMITIDOS = Set.of(
-			"REGISTRADO",
-			"EN PREPARACION",
-			"PREPARADO",
-			"ENTREGADO"
-	);
+	private static final int LONGITUD_MINIMA_ESTADO = 6;
+	private static final int LONGITUD_MAXIMA_ESTADO = 14;
 
 	private final DAOFactory daoFactory;
 
 	public ActualizarEstadoPedidoCasoUsoImpl(final DAOFactory daoFactory) {
-		this.daoFactory = daoFactory;
+		this.daoFactory = UtilObjeto.obtenerValorDefecto(
+				daoFactory,
+				DAOFactory.getFactory());
 	}
 
 	@Override
 	public void ejecutar(final PedidoDominio datos) {
+		logger.info("Iniciando la actualización del estado de un pedido.");
 
-		// 1. Validación de datos consistentes:
-		// tipo de dato, longitud, obligatoriedad, formato y rango.
-		validarDatosConsistentes(datos);
+		var pedidoActualizar = UtilObjeto.obtenerValorDefecto(
+				datos,
+				PedidoDominio.builder().build());
 
-		var codigoPedido = UtilTexto.aplicarTrim(datos.getCodigoPedido());
-		var nuevoEstado = normalizarEstado(datos.getEstado());
+		var codigoPedido = validarYNormalizarCodigoPedido(
+				pedidoActualizar.getCodigoPedido());
 
-		// 2. Debe existir un pedido registrado con el código indicado.
-		var pedidoEntidad = daoFactory.obtenerPedidoDAO().consultarPorId(codigoPedido);
+		var nuevoEstado = validarYNormalizarEstadoPedido(
+				pedidoActualizar.getEstado());
 
-		if (UtilObjeto.esNulo(pedidoEntidad)) {
-			throw new RuntimeException("No existe un pedido registrado con el código indicado.");
+		var pedidoEntidad = daoFactory.obtenerPedidoDAO()
+				.consultarPorId(codigoPedido);
+
+		if (UtilObjeto.esNulo(pedidoEntidad)
+				|| UtilTexto.esVacio(pedidoEntidad.getCodigoPedido())) {
+
+			throw NegocioPatioMaruExcepcion.crear(
+					"No existe un pedido registrado con el código indicado.");
 		}
 
-		var pedidoActual = PedidoEntidadAssembler.getInstance().ensamblarDominio(pedidoEntidad);
-		var estadoActual = normalizarEstado(pedidoActual.getEstado());
+		var pedidoActual = PedidoEntidadAssembler.getInstance()
+				.ensamblarDominio(pedidoEntidad);
 
-		// 3. No se debe actualizar el estado de un pedido cancelado.
+		validarCambioEstadoPermitido(
+				pedidoActual.getEstado(),
+				nuevoEstado);
+
+		daoFactory.obtenerPedidoDAO()
+				.actualizarEstado(codigoPedido, nuevoEstado);
+
+		logger.info("Estado del pedido actualizado satisfactoriamente.");
+	}
+
+	private String validarYNormalizarCodigoPedido(final String codigoPedido) {
+		if (!UtilTexto.tieneTexto(codigoPedido)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del pedido es obligatorio.");
+		}
+
+		var codigoPedidoNormalizado = UtilTexto.aplicarTrim(codigoPedido);
+
+		if (codigoPedidoNormalizado.length() != LONGITUD_CODIGO_PEDIDO) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del pedido debe tener exactamente "
+							+ LONGITUD_CODIGO_PEDIDO + " caracteres.");
+		}
+
+		if (!codigoPedidoNormalizado.startsWith(PREFIJO_PEDIDO)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del pedido debe iniciar con " + PREFIJO_PEDIDO + ".");
+		}
+
+		if (!contieneSoloDigitos(codigoPedidoNormalizado.substring(POSICION_INICIO_DIGITOS_PEDIDO))) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El código del pedido debe tener el formato PEDD seguido de tres dígitos numéricos.");
+		}
+
+		return codigoPedidoNormalizado;
+	}
+
+	private String validarYNormalizarEstadoPedido(final String estado) {
+		if (!UtilTexto.tieneTexto(estado)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El nuevo estado del pedido es obligatorio.");
+		}
+
+		var estadoNormalizado = normalizarEstadoPermitido(estado);
+
+		validarLongitud(
+				estadoNormalizado,
+				LONGITUD_MINIMA_ESTADO,
+				LONGITUD_MAXIMA_ESTADO,
+				"El estado del pedido");
+
+		if (!esEstadoActualizableValido(estadoNormalizado)) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El estado del pedido solo puede ser Registrado, En preparación, Pagado o Entregado.");
+		}
+
+		return estadoNormalizado;
+	}
+
+	private String normalizarEstadoPermitido(final String estado) {
+		if (UtilTexto.sonIgualesIgnorandoMayusculas(estado, ESTADO_REGISTRADO)) {
+			return ESTADO_REGISTRADO;
+		}
+
+		if (UtilTexto.sonIgualesIgnorandoMayusculas(estado, ESTADO_EN_PREPARACION)) {
+			return ESTADO_EN_PREPARACION;
+		}
+
+		if (UtilTexto.sonIgualesIgnorandoMayusculas(estado, ESTADO_PAGADO)) {
+			return ESTADO_PAGADO;
+		}
+
+		if (UtilTexto.sonIgualesIgnorandoMayusculas(estado, ESTADO_ENTREGADO)) {
+			return ESTADO_ENTREGADO;
+		}
+
+		if (UtilTexto.sonIgualesIgnorandoMayusculas(estado, ESTADO_CANCELADO)) {
+			return ESTADO_CANCELADO;
+		}
+
+		return UtilTexto.aplicarTrim(estado);
+	}
+
+	private boolean esEstadoActualizableValido(final String estado) {
+		return UtilTexto.sonIgualesIgnorandoMayusculas(estado, ESTADO_REGISTRADO)
+				|| UtilTexto.sonIgualesIgnorandoMayusculas(estado, ESTADO_EN_PREPARACION)
+				|| UtilTexto.sonIgualesIgnorandoMayusculas(estado, ESTADO_PAGADO)
+				|| UtilTexto.sonIgualesIgnorandoMayusculas(estado, ESTADO_ENTREGADO);
+	}
+
+	private void validarCambioEstadoPermitido(
+			final String estadoActual,
+			final String nuevoEstado) {
+
 		if (UtilTexto.sonIgualesIgnorandoMayusculas(estadoActual, ESTADO_CANCELADO)) {
-			throw new RuntimeException("No es posible actualizar el estado de un pedido cancelado.");
+			throw NegocioPatioMaruExcepcion.crear(
+					"No es posible actualizar el estado de un pedido cancelado.");
 		}
 
-		// 4. La responsabilidad de cancelar pedido se maneja en otro caso de uso.
 		if (UtilTexto.sonIgualesIgnorandoMayusculas(nuevoEstado, ESTADO_CANCELADO)) {
-			throw new RuntimeException("Para cancelar un pedido debe usar la operación Cancelar Pedido.");
+			throw NegocioPatioMaruExcepcion.crear(
+					"Para cancelar un pedido debe usar la operación Cancelar Pedido.");
 		}
 
-		// 5. El nuevo estado no debe ser igual al estado actual.
 		if (UtilTexto.sonIgualesIgnorandoMayusculas(estadoActual, nuevoEstado)) {
-			throw new RuntimeException("El pedido ya se encuentra en el estado indicado.");
-		}
-
-		// 6. Actualizar el estado del pedido.
-		daoFactory.obtenerPedidoDAO().actualizarEstado(codigoPedido, nuevoEstado);
-	}
-
-	private void validarDatosConsistentes(final PedidoDominio datos) {
-		if (UtilObjeto.esNulo(datos)) {
-			throw new RuntimeException("Los datos para actualizar el estado del pedido son obligatorios.");
-		}
-
-		if (!UtilTexto.tieneTexto(datos.getCodigoPedido())) {
-			throw new RuntimeException("El código del pedido es obligatorio.");
-		}
-
-		if (UtilTexto.aplicarTrim(datos.getCodigoPedido()).length() != LONGITUD_CODIGO_PEDIDO) {
-			throw new RuntimeException("El código del pedido debe tener exactamente "
-					+ LONGITUD_CODIGO_PEDIDO + " caracteres.");
-		}
-
-		if (!UtilTexto.tieneTexto(datos.getEstado())) {
-			throw new RuntimeException("El nuevo estado del pedido es obligatorio.");
-		}
-
-		validarLongitud(datos.getEstado(), 6, 14, "El estado del pedido");
-
-		var estadoNormalizado = normalizarEstado(datos.getEstado());
-
-		if (!ESTADOS_PERMITIDOS.contains(estadoNormalizado)
-				&& !UtilTexto.sonIgualesIgnorandoMayusculas(estadoNormalizado, ESTADO_CANCELADO)) {
-			throw new RuntimeException(
-					"El estado del pedido no es válido. Estados permitidos: REGISTRADO, EN PREPARACION, PREPARADO, ENTREGADO.");
+			throw NegocioPatioMaruExcepcion.crear(
+					"El pedido ya se encuentra en el estado indicado.");
 		}
 	}
 
-	private void validarLongitud(final String valor, final int longitudMinima, final int longitudMaxima,
+	private void validarLongitud(
+			final String valor,
+			final int longitudMinima,
+			final int longitudMaxima,
 			final String nombreCampo) {
 
 		var valorSeguro = UtilTexto.aplicarTrim(valor);
 
 		if (valorSeguro.length() < longitudMinima || valorSeguro.length() > longitudMaxima) {
-			throw new RuntimeException(nombreCampo + " debe tener entre " + longitudMinima + " y "
-					+ longitudMaxima + " caracteres.");
+			throw NegocioPatioMaruExcepcion.crear(
+					nombreCampo + " debe tener entre " + longitudMinima + " y "
+							+ longitudMaxima + " caracteres.");
 		}
 	}
 
-	private String normalizarEstado(final String estado) {
-		return UtilTexto.aplicarTrimConvertirMayusculas(estado);
+	private boolean contieneSoloDigitos(final String valor) {
+		var valorSeguro = UtilTexto.aplicarTrim(valor);
+
+		for (int indice = 0; indice < valorSeguro.length(); indice++) {
+			if (!Character.isDigit(valorSeguro.charAt(indice))) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 }

@@ -6,7 +6,11 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import co.edu.uco.patiomaruparking.datos.dao.sql.factoria.DAOFactory;
+import co.edu.uco.patiomaruparking.entidad.DetallePedidoEntidad;
 import co.edu.uco.patiomaruparking.entidad.PedidoEntidad;
 import co.edu.uco.patiomaruparking.negocio.assembler.entidad.impl.ClienteEntidadAssembler;
 import co.edu.uco.patiomaruparking.negocio.assembler.entidad.impl.DetallePedidoEntidadAssembler;
@@ -24,50 +28,75 @@ import co.edu.uco.patiomaruparking.negocio.dominio.PlatoDominio;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilCodigo;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
+import co.edu.uco.patiomaruparking.transversal.utilitario.excepcion.NegocioPatioMaruExcepcion;
 
 public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso {
 
-	private static final String ESTADO_PEDIDO_REGISTRADO = "REGISTRADO";
+	private static final Logger logger = LoggerFactory.getLogger(RegistrarPedidoCasoUsoImpl.class);
+
+	private static final String PREFIJO_PEDIDO = "PEDD";
+	private static final int CANTIDAD_DIGITOS_PEDIDO = 3;
+
+	private static final String PREFIJO_DETALLE_PEDIDO = "DP";
+	private static final int CANTIDAD_DIGITOS_DETALLE_PEDIDO = 3;
+
+	private static final String ESTADO_PEDIDO_REGISTRADO = "Registrado";
+
+	private static final String TIPO_ATENCION_MESA = "Mesa";
+	private static final String TIPO_ATENCION_PARA_LLEVAR = "Para llevar";
+
+	private static final String CODIGO_MESA_NO_APLICA = "MESA000";
+
+	private static final int LONGITUD_MINIMA_TIPO_ATENCION = 4;
+	private static final int LONGITUD_MAXIMA_TIPO_ATENCION = 11;
+	private static final int CANTIDAD_MINIMA_PERMITIDA = 1;
 
 	private final DAOFactory daoFactory;
 
 	public RegistrarPedidoCasoUsoImpl(final DAOFactory daoFactory) {
-		this.daoFactory = daoFactory;
+		this.daoFactory = UtilObjeto.obtenerValorDefecto(
+				daoFactory,
+				DAOFactory.getFactory());
 	}
 
 	@Override
 	public PedidoDominio ejecutar(final PedidoDominio datos) {
+		logger.info("Iniciando el registro de un pedido.");
 
-		// 1. Validación de datos consistentes:
-		// tipo de dato, longitud, obligatoriedad, formato y rango.
-		validarDatosConsistentes(datos);
+		var pedido = UtilObjeto.obtenerValorDefecto(
+				datos,
+				PedidoDominio.builder().build());
 
-		var fechaRegistro = obtenerFechaRegistro(datos);
-		var horaRegistro = obtenerHoraRegistro(datos);
+		validarDatosConsistentesPedido(pedido);
 
-		// 2. Validación de objetos relacionados:
-		// cliente existente y activo, empleado existente y activo, mesa existente cuando aplique.
-		var cliente = validarYObtenerCliente(datos);
-		var empleado = validarYObtenerEmpleado(datos);
-		var mesa = validarYObtenerMesaSiAplica(datos);
+		var fechaRegistro = obtenerFechaRegistro(pedido);
+		var horaRegistro = obtenerHoraRegistro(pedido);
 
-		// 3. No debe existir un pedido con la misma combinación única documentada:
-		// fechaRegistro + horaRegistro + tipoAtencion + cliente + empleado + mesa cuando aplique.
-		validarNoExistePedidoConMismaCombinacion(datos, fechaRegistro, horaRegistro, cliente, empleado, mesa);
+		var cliente = validarYObtenerCliente(pedido);
+		var empleado = validarYObtenerEmpleado(pedido);
+		var mesa = validarYObtenerMesaSiAplica(pedido);
 
-		// 4. El código del pedido debe ser único.
+		validarNoExistePedidoConMismaCombinacion(
+				pedido,
+				fechaRegistro,
+				horaRegistro,
+				cliente,
+				empleado,
+				mesa);
+
 		var codigoPedido = generarCodigoUnicoPedido();
 
-		// 5. Cada detalle del pedido debe tener un código único y datos consistentes.
-		// 6. Cálculo de valores: subtotal por detalle y total del pedido.
-		var detallesPreparados = prepararDetallesPedido(datos, codigoPedido);
+		var detallesPreparados = prepararDetallesPedido(
+				pedido,
+				codigoPedido);
+
 		var totalPedido = calcularTotalPedido(detallesPreparados);
 
 		var pedidoPreparado = PedidoDominio.builder()
 				.codigoPedido(codigoPedido)
 				.fechaRegistro(fechaRegistro)
 				.horaRegistro(horaRegistro)
-				.tipoAtencion(datos.getTipoAtencion())
+				.tipoAtencion(UtilTexto.aplicarTrim(pedido.getTipoAtencion()))
 				.estado(ESTADO_PEDIDO_REGISTRADO)
 				.totalPedido(totalPedido)
 				.mesa(mesa)
@@ -79,138 +108,200 @@ public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso 
 		guardarPedido(pedidoPreparado);
 		guardarDetallesPedido(detallesPreparados);
 
+		logger.info("Pedido registrado satisfactoriamente.");
+
 		return pedidoPreparado;
 	}
 
-	private void validarDatosConsistentes(final PedidoDominio datos) {
-		if (UtilObjeto.esNulo(datos)) {
-			throw new RuntimeException("Los datos del pedido son obligatorios.");
+	private void validarDatosConsistentesPedido(final PedidoDominio pedido) {
+		validarTipoAtencion(pedido);
+		validarClientePedido(pedido);
+		validarEmpleadoPedido(pedido);
+		validarDetallesPedido(pedido);
+	}
+
+	private void validarTipoAtencion(final PedidoDominio pedido) {
+		if (!UtilTexto.tieneTexto(pedido.getTipoAtencion())) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El tipo de atención del pedido es obligatorio.");
 		}
 
-		if (!UtilTexto.tieneTexto(datos.getTipoAtencion())) {
-			throw new RuntimeException("El tipo de atención del pedido es obligatorio.");
-		}
+		validarLongitud(
+				pedido.getTipoAtencion(),
+				LONGITUD_MINIMA_TIPO_ATENCION,
+				LONGITUD_MAXIMA_TIPO_ATENCION,
+				"El tipo de atención");
 
-		validarLongitud(datos.getTipoAtencion(), 4, 11, "El tipo de atención");
-
-		if (UtilObjeto.esNulo(datos.getCliente())
-				|| !UtilTexto.tieneTexto(datos.getCliente().getCodigoCliente())) {
-			throw new RuntimeException("El cliente del pedido es obligatorio.");
-		}
-
-		if (UtilObjeto.esNulo(datos.getEmpleado())
-				|| !UtilTexto.tieneTexto(datos.getEmpleado().getCodigoEmpleado())) {
-			throw new RuntimeException("El empleado que registra el pedido es obligatorio.");
-		}
-
-		if (UtilObjeto.esNulo(datos.getDetalles()) || datos.getDetalles().isEmpty()) {
-			throw new RuntimeException("El pedido debe tener al menos un detalle registrado.");
+		if (!esTipoAtencionValido(pedido.getTipoAtencion())) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El tipo de atención del pedido solo puede ser Mesa o Para llevar.");
 		}
 	}
 
-	private void validarLongitud(final String valor, final int longitudMinima, final int longitudMaxima,
+	private void validarClientePedido(final PedidoDominio pedido) {
+		if (!UtilTexto.tieneTexto(pedido.getCliente().getCodigoCliente())) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El cliente del pedido es obligatorio.");
+		}
+	}
+
+	private void validarEmpleadoPedido(final PedidoDominio pedido) {
+		if (!UtilTexto.tieneTexto(pedido.getEmpleado().getCodigoEmpleado())) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El empleado que registra el pedido es obligatorio.");
+		}
+	}
+
+	private void validarDetallesPedido(final PedidoDominio pedido) {
+		if (pedido.getDetalles().isEmpty()) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El pedido debe tener al menos un detalle registrado.");
+		}
+	}
+
+	private void validarLongitud(
+			final String valor,
+			final int longitudMinima,
+			final int longitudMaxima,
 			final String nombreCampo) {
 
 		var valorSeguro = UtilTexto.aplicarTrim(valor);
 
 		if (valorSeguro.length() < longitudMinima || valorSeguro.length() > longitudMaxima) {
-			throw new RuntimeException(nombreCampo + " debe tener entre " + longitudMinima + " y "
-					+ longitudMaxima + " caracteres.");
+			throw NegocioPatioMaruExcepcion.crear(
+					nombreCampo + " debe tener entre " + longitudMinima + " y "
+							+ longitudMaxima + " caracteres.");
 		}
 	}
 
-	private LocalDate obtenerFechaRegistro(final PedidoDominio datos) {
-		return UtilObjeto.noEsNulo(datos.getFechaRegistro()) ? datos.getFechaRegistro() : LocalDate.now();
+	private boolean esTipoAtencionValido(final String tipoAtencion) {
+		return esAtencionEnMesa(tipoAtencion)
+				|| esAtencionParaLlevar(tipoAtencion);
 	}
 
-	private LocalTime obtenerHoraRegistro(final PedidoDominio datos) {
-		return UtilObjeto.noEsNulo(datos.getHoraRegistro()) ? datos.getHoraRegistro().withNano(0)
-				: LocalTime.now().withNano(0);
+	private boolean esAtencionEnMesa(final String tipoAtencion) {
+		return UtilTexto.sonIgualesIgnorandoMayusculas(
+				tipoAtencion,
+				TIPO_ATENCION_MESA);
 	}
 
-	private ClienteDominio validarYObtenerCliente(final PedidoDominio datos) {
-		var codigoCliente = UtilTexto.aplicarTrim(datos.getCliente().getCodigoCliente());
+	private boolean esAtencionParaLlevar(final String tipoAtencion) {
+		return UtilTexto.sonIgualesIgnorandoMayusculas(
+				tipoAtencion,
+				TIPO_ATENCION_PARA_LLEVAR);
+	}
 
-		var clienteEntidad = daoFactory.obtenerClienteDAO().consultarPorId(codigoCliente);
+	private LocalDate obtenerFechaRegistro(final PedidoDominio pedido) {
+		return UtilObjeto.obtenerValorDefecto(
+				pedido.getFechaRegistro(),
+				LocalDate.now());
+	}
 
-		if (UtilObjeto.esNulo(clienteEntidad)) {
-			throw new RuntimeException("No existe un cliente registrado con el código indicado.");
+	private LocalTime obtenerHoraRegistro(final PedidoDominio pedido) {
+		var horaRegistro = UtilObjeto.obtenerValorDefecto(
+				pedido.getHoraRegistro(),
+				LocalTime.now());
+
+		return horaRegistro.withNano(0);
+	}
+
+	private ClienteDominio validarYObtenerCliente(final PedidoDominio pedido) {
+		var codigoCliente = UtilTexto.aplicarTrim(
+				pedido.getCliente().getCodigoCliente());
+
+		var clienteEntidad = daoFactory.obtenerClienteDAO()
+				.consultarPorId(codigoCliente);
+
+		if (UtilObjeto.esNulo(clienteEntidad)
+				|| UtilTexto.esVacio(clienteEntidad.getCodigoCliente())) {
+
+			throw NegocioPatioMaruExcepcion.crear(
+					"No existe un cliente registrado con el código indicado.");
 		}
 
-		var cliente = ClienteEntidadAssembler.getInstance().ensamblarDominio(clienteEntidad);
+		var cliente = ClienteEntidadAssembler.getInstance()
+				.ensamblarDominio(clienteEntidad);
 
 		if (!cliente.estaActivo()) {
-			throw new RuntimeException("El cliente asociado al pedido no se encuentra activo.");
+			throw NegocioPatioMaruExcepcion.crear(
+					"El cliente asociado al pedido no se encuentra activo.");
 		}
 
 		return cliente;
 	}
 
-	private EmpleadoDominio validarYObtenerEmpleado(final PedidoDominio datos) {
-		var codigoEmpleado = UtilTexto.aplicarTrim(datos.getEmpleado().getCodigoEmpleado());
+	private EmpleadoDominio validarYObtenerEmpleado(final PedidoDominio pedido) {
+		var codigoEmpleado = UtilTexto.aplicarTrim(
+				pedido.getEmpleado().getCodigoEmpleado());
 
-		var empleadoEntidad = daoFactory.obtenerEmpleadoDAO().consultarPorId(codigoEmpleado);
+		var empleadoEntidad = daoFactory.obtenerEmpleadoDAO()
+				.consultarPorId(codigoEmpleado);
 
-		if (UtilObjeto.esNulo(empleadoEntidad)) {
-			throw new RuntimeException("No existe un empleado registrado con el código indicado.");
+		if (UtilObjeto.esNulo(empleadoEntidad)
+				|| UtilTexto.esVacio(empleadoEntidad.getCodigoEmpleado())) {
+
+			throw NegocioPatioMaruExcepcion.crear(
+					"No existe un empleado registrado con el código indicado.");
 		}
 
-		var empleado = EmpleadoEntidadAssembler.getInstance().ensamblarDominio(empleadoEntidad);
+		var empleado = EmpleadoEntidadAssembler.getInstance()
+				.ensamblarDominio(empleadoEntidad);
 
 		if (!empleado.estaActivo()) {
-			throw new RuntimeException("El empleado asociado al pedido no se encuentra activo.");
+			throw NegocioPatioMaruExcepcion.crear(
+					"El empleado asociado al pedido no se encuentra activo.");
 		}
 
 		return empleado;
 	}
 
-	private MesaDominio validarYObtenerMesaSiAplica(final PedidoDominio datos) {
-		if (!requiereMesa(datos.getTipoAtencion())) {
-			if (UtilObjeto.noEsNulo(datos.getMesa())
-					&& UtilTexto.tieneTexto(datos.getMesa().getCodigoMesa())) {
-
-				var mesaEntidad = daoFactory.obtenerMesaDAO()
-						.consultarPorId(UtilTexto.aplicarTrim(datos.getMesa().getCodigoMesa()));
-
-				if (UtilObjeto.esNulo(mesaEntidad)) {
-					throw new RuntimeException("No existe una mesa registrada con el código indicado.");
-				}
-
-				return MesaEntidadAssembler.getInstance().ensamblarDominio(mesaEntidad);
-			}
-
-			return MesaDominio.builder().build();
+	private MesaDominio validarYObtenerMesaSiAplica(final PedidoDominio pedido) {
+		if (esAtencionParaLlevar(pedido.getTipoAtencion())) {
+			return validarYObtenerMesaNoAplica();
 		}
 
-		if (UtilObjeto.esNulo(datos.getMesa()) || !UtilTexto.tieneTexto(datos.getMesa().getCodigoMesa())) {
-			throw new RuntimeException("La mesa es obligatoria cuando el tipo de atención es en mesa.");
+		if (!UtilTexto.tieneTexto(pedido.getMesa().getCodigoMesa())) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"La mesa es obligatoria cuando el tipo de atención es Mesa.");
 		}
 
+		var codigoMesa = UtilTexto.aplicarTrim(
+				pedido.getMesa().getCodigoMesa());
+
+		return validarYObtenerMesaPorCodigo(codigoMesa);
+	}
+
+	private MesaDominio validarYObtenerMesaNoAplica() {
+		return validarYObtenerMesaPorCodigo(CODIGO_MESA_NO_APLICA);
+	}
+
+	private MesaDominio validarYObtenerMesaPorCodigo(final String codigoMesa) {
 		var mesaEntidad = daoFactory.obtenerMesaDAO()
-				.consultarPorId(UtilTexto.aplicarTrim(datos.getMesa().getCodigoMesa()));
+				.consultarPorId(codigoMesa);
 
-		if (UtilObjeto.esNulo(mesaEntidad)) {
-			throw new RuntimeException("No existe una mesa registrada con el código indicado.");
+		if (UtilObjeto.esNulo(mesaEntidad)
+				|| UtilTexto.esVacio(mesaEntidad.getCodigoMesa())) {
+
+			throw NegocioPatioMaruExcepcion.crear(
+					"No existe una mesa registrada con el código indicado.");
 		}
 
-		return MesaEntidadAssembler.getInstance().ensamblarDominio(mesaEntidad);
+		return MesaEntidadAssembler.getInstance()
+				.ensamblarDominio(mesaEntidad);
 	}
 
-	private boolean requiereMesa(final String tipoAtencion) {
-		return UtilTexto.sonIgualesIgnorandoMayusculas(tipoAtencion, "MESA")
-				|| UtilTexto.sonIgualesIgnorandoMayusculas(tipoAtencion, "EN MESA")
-				|| UtilTexto.sonIgualesIgnorandoMayusculas(tipoAtencion, "SERVICIO MESA")
-				|| UtilTexto.sonIgualesIgnorandoMayusculas(tipoAtencion, "SERVICIO EN MESA");
-	}
-
-	private void validarNoExistePedidoConMismaCombinacion(final PedidoDominio datos, final LocalDate fechaRegistro,
-			final LocalTime horaRegistro, final ClienteDominio cliente, final EmpleadoDominio empleado,
+	private void validarNoExistePedidoConMismaCombinacion(
+			final PedidoDominio pedido,
+			final LocalDate fechaRegistro,
+			final LocalTime horaRegistro,
+			final ClienteDominio cliente,
+			final EmpleadoDominio empleado,
 			final MesaDominio mesa) {
 
 		var filtro = PedidoEntidad.builder()
 				.fechaRegistro(fechaRegistro)
 				.horaRegistro(horaRegistro)
-				.tipoAtencion(datos.getTipoAtencion())
+				.tipoAtencion(pedido.getTipoAtencion())
 				.cliente(ClienteEntidadAssembler.getInstance().ensamblarEntidad(cliente))
 				.empleado(EmpleadoEntidadAssembler.getInstance().ensamblarEntidad(empleado))
 				.mesa(MesaEntidadAssembler.getInstance().ensamblarEntidad(mesa))
@@ -218,31 +309,43 @@ public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso 
 
 		var resultados = daoFactory.obtenerPedidoDAO().consultar(filtro);
 
-		if (existePedidoConMismaCombinacion(resultados, fechaRegistro, horaRegistro, datos.getTipoAtencion(),
-				cliente, empleado, mesa)) {
-			throw new RuntimeException(
+		if (existePedidoConMismaCombinacion(
+				resultados,
+				fechaRegistro,
+				horaRegistro,
+				pedido.getTipoAtencion(),
+				cliente,
+				empleado,
+				mesa)) {
+
+			throw NegocioPatioMaruExcepcion.crear(
 					"Ya existe un pedido registrado con la misma fecha, hora, tipo de atención, cliente, empleado y mesa.");
 		}
 	}
 
-	private boolean existePedidoConMismaCombinacion(final List<PedidoEntidad> resultados,
-			final LocalDate fechaRegistro, final LocalTime horaRegistro, final String tipoAtencion,
-			final ClienteDominio cliente, final EmpleadoDominio empleado, final MesaDominio mesa) {
+	private boolean existePedidoConMismaCombinacion(
+			final List<PedidoEntidad> resultados,
+			final LocalDate fechaRegistro,
+			final LocalTime horaRegistro,
+			final String tipoAtencion,
+			final ClienteDominio cliente,
+			final EmpleadoDominio empleado,
+			final MesaDominio mesa) {
 
-		if (UtilObjeto.esNulo(resultados) || resultados.isEmpty()) {
-			return false;
-		}
+		var pedidos = UtilObjeto.obtenerValorDefecto(
+				resultados,
+				List.<PedidoEntidad>of());
 
-		for (PedidoEntidad pedido : resultados) {
-			if (fechaIgual(pedido.getFechaRegistro(), fechaRegistro)
-					&& horaIgual(pedido.getHoraRegistro(), horaRegistro)
-					&& UtilTexto.sonIgualesIgnorandoMayusculas(pedido.getTipoAtencion(), tipoAtencion)
-					&& UtilTexto.sonIgualesIgnorandoMayusculas(
-							pedido.getCliente().getCodigoCliente(), cliente.getCodigoCliente())
-					&& UtilTexto.sonIgualesIgnorandoMayusculas(
-							pedido.getEmpleado().getCodigoEmpleado(), empleado.getCodigoEmpleado())
-					&& UtilTexto.sonIgualesIgnorandoMayusculas(
-							pedido.getMesa().getCodigoMesa(), mesa.getCodigoMesa())) {
+		for (PedidoEntidad pedido : pedidos) {
+			if (coincideCombinacionPedido(
+					pedido,
+					fechaRegistro,
+					horaRegistro,
+					tipoAtencion,
+					cliente,
+					empleado,
+					mesa)) {
+
 				return true;
 			}
 		}
@@ -250,87 +353,181 @@ public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso 
 		return false;
 	}
 
-	private ArrayList<DetallePedidoDominio> prepararDetallesPedido(final PedidoDominio datos,
+	private boolean coincideCombinacionPedido(
+			final PedidoEntidad pedido,
+			final LocalDate fechaRegistro,
+			final LocalTime horaRegistro,
+			final String tipoAtencion,
+			final ClienteDominio cliente,
+			final EmpleadoDominio empleado,
+			final MesaDominio mesa) {
+
+		return fechaIgual(pedido.getFechaRegistro(), fechaRegistro)
+				&& horaIgual(pedido.getHoraRegistro(), horaRegistro)
+				&& UtilTexto.sonIgualesIgnorandoMayusculas(
+						pedido.getTipoAtencion(),
+						tipoAtencion)
+				&& UtilTexto.sonIgualesIgnorandoMayusculas(
+						pedido.getCliente().getCodigoCliente(),
+						cliente.getCodigoCliente())
+				&& UtilTexto.sonIgualesIgnorandoMayusculas(
+						pedido.getEmpleado().getCodigoEmpleado(),
+						empleado.getCodigoEmpleado())
+				&& UtilTexto.sonIgualesIgnorandoMayusculas(
+						pedido.getMesa().getCodigoMesa(),
+						mesa.getCodigoMesa());
+	}
+
+	private List<DetallePedidoDominio> prepararDetallesPedido(
+			final PedidoDominio pedido,
 			final String codigoPedido) {
 
 		var detallesPreparados = new ArrayList<DetallePedidoDominio>();
+		var codigosDetalleGenerados = new ArrayList<String>();
+		var codigosPlatoAgregados = new ArrayList<String>();
 
-		for (DetallePedidoDominio detalle : datos.getDetalles()) {
-			validarDatosConsistentesDetalle(detalle);
+		for (DetallePedidoDominio detalle : pedido.getDetalles()) {
+			var detalleSeguro = UtilObjeto.obtenerValorDefecto(
+					detalle,
+					DetallePedidoDominio.builder().build());
 
-			var plato = validarYObtenerPlato(detalle);
+			validarDatosConsistentesDetalle(detalleSeguro);
+
+			var plato = validarYObtenerPlato(detalleSeguro);
+			var cantidad = obtenerCantidadDetalle(detalleSeguro);
+
+			validarPlatoNoRepetidoEnPedido(
+					codigosPlatoAgregados,
+					plato.getCodigoPlato());
+
+			var codigoDetallePedido = generarCodigoUnicoDetallePedido(
+					codigosDetalleGenerados);
+
+			var subtotal = calcularSubtotalDetalle(
+					plato,
+					cantidad);
 
 			var detallePreparado = DetallePedidoDominio.builder()
-					.codigoDetallePedido(generarCodigoUnicoDetallePedido())
+					.codigoDetallePedido(codigoDetallePedido)
 					.codigoPedido(codigoPedido)
-					.cantidad(detalle.getCantidad())
+					.cantidad(cantidad)
 					.plato(plato)
-					.subtotal(plato.getPrecioVenta().multiply(BigDecimal.valueOf(detalle.getCantidad())))
+					.subtotal(subtotal)
 					.build();
 
 			detallesPreparados.add(detallePreparado);
+			codigosDetalleGenerados.add(codigoDetallePedido);
+			codigosPlatoAgregados.add(plato.getCodigoPlato());
 		}
 
 		return detallesPreparados;
 	}
 
 	private void validarDatosConsistentesDetalle(final DetallePedidoDominio detalle) {
-		if (UtilObjeto.esNulo(detalle)) {
-			throw new RuntimeException("La información del detalle del pedido es obligatoria.");
+		var cantidad = obtenerCantidadDetalle(detalle);
+
+		if (cantidad < CANTIDAD_MINIMA_PERMITIDA) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"La cantidad del detalle del pedido debe ser mayor que cero.");
 		}
 
-		if (UtilObjeto.esNulo(detalle.getCantidad()) || detalle.getCantidad() <= 0) {
-			throw new RuntimeException("La cantidad del detalle del pedido debe ser mayor que cero.");
-		}
-
-		if (UtilObjeto.esNulo(detalle.getPlato())
-				|| !UtilTexto.tieneTexto(detalle.getPlato().getCodigoPlato())) {
-			throw new RuntimeException("El plato del detalle del pedido es obligatorio.");
+		if (!UtilTexto.tieneTexto(detalle.getPlato().getCodigoPlato())) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"El plato del detalle del pedido es obligatorio.");
 		}
 	}
 
+	private Integer obtenerCantidadDetalle(final DetallePedidoDominio detalle) {
+		return UtilObjeto.obtenerValorDefecto(
+				detalle.getCantidad(),
+				0);
+	}
+
 	private PlatoDominio validarYObtenerPlato(final DetallePedidoDominio detalle) {
-		var codigoPlato = UtilTexto.aplicarTrim(detalle.getPlato().getCodigoPlato());
+		var codigoPlato = UtilTexto.aplicarTrim(
+				detalle.getPlato().getCodigoPlato());
 
-		var platoEntidad = daoFactory.obtenerPlatoDAO().consultarPorId(codigoPlato);
+		var platoEntidad = daoFactory.obtenerPlatoDAO()
+				.consultarPorId(codigoPlato);
 
-		if (UtilObjeto.esNulo(platoEntidad)) {
-			throw new RuntimeException("No existe un plato registrado con el código indicado.");
+		if (UtilObjeto.esNulo(platoEntidad)
+				|| UtilTexto.esVacio(platoEntidad.getCodigoPlato())) {
+
+			throw NegocioPatioMaruExcepcion.crear(
+					"No existe un plato registrado con el código indicado.");
 		}
 
-		var plato = PlatoEntidadAssembler.getInstance().ensamblarDominio(platoEntidad);
+		var plato = PlatoEntidadAssembler.getInstance()
+				.ensamblarDominio(platoEntidad);
 
 		if (!plato.estaDisponible()) {
-			throw new RuntimeException("El plato " + plato.getNombre() + " no se encuentra disponible.");
+			throw NegocioPatioMaruExcepcion.crear(
+					"El plato " + plato.getNombre() + " no se encuentra disponible.");
 		}
 
 		if (!plato.tienePrecioVentaValido()) {
-			throw new RuntimeException("El plato " + plato.getNombre() + " no tiene un precio de venta válido.");
+			throw NegocioPatioMaruExcepcion.crear(
+					"El plato " + plato.getNombre() + " no tiene un precio de venta válido.");
 		}
 
 		return plato;
 	}
 
-	private BigDecimal calcularTotalPedido(final ArrayList<DetallePedidoDominio> detalles) {
+	private void validarPlatoNoRepetidoEnPedido(
+			final List<String> codigosPlatoAgregados,
+			final String codigoPlato) {
+
+		for (String codigoPlatoAgregado : codigosPlatoAgregados) {
+			if (UtilTexto.sonIgualesIgnorandoMayusculas(
+					codigoPlatoAgregado,
+					codigoPlato)) {
+
+				throw NegocioPatioMaruExcepcion.crear(
+						"No se puede registrar dos veces el mismo plato dentro del mismo pedido.");
+			}
+		}
+	}
+
+	private BigDecimal calcularSubtotalDetalle(
+			final PlatoDominio plato,
+			final Integer cantidad) {
+
+		return plato.getPrecioVenta()
+				.multiply(BigDecimal.valueOf(cantidad));
+	}
+
+	private BigDecimal calcularTotalPedido(final List<DetallePedidoDominio> detalles) {
 		var total = BigDecimal.ZERO;
 
 		for (DetallePedidoDominio detalle : detalles) {
-			total = total.add(detalle.getSubtotal());
+			total = total.add(
+					UtilObjeto.obtenerValorDefecto(
+							detalle.getSubtotal(),
+							BigDecimal.ZERO));
 		}
 
 		return total;
 	}
 
 	private void guardarPedido(final PedidoDominio pedido) {
-		var pedidoEntidad = PedidoEntidadAssembler.getInstance().ensamblarEntidad(pedido);
+		var pedidoEntidad = PedidoEntidadAssembler.getInstance()
+				.ensamblarEntidad(pedido);
+
 		daoFactory.obtenerPedidoDAO().registrar(pedidoEntidad);
 	}
 
-	private void guardarDetallesPedido(final ArrayList<DetallePedidoDominio> detalles) {
+	private void guardarDetallesPedido(final List<DetallePedidoDominio> detalles) {
 		for (DetallePedidoDominio detalle : detalles) {
-			var detalleEntidad = DetallePedidoEntidadAssembler.getInstance().ensamblarEntidad(detalle);
-			daoFactory.obtenerDetallePedidoDAO().registrar(detalleEntidad);
+			guardarDetallePedido(detalle);
 		}
+	}
+
+	private void guardarDetallePedido(final DetallePedidoDominio detalle) {
+		var detalleEntidad = DetallePedidoEntidadAssembler.getInstance()
+				.ensamblarEntidad(detalle);
+
+		daoFactory.obtenerDetallePedidoDAO()
+				.registrar(detalleEntidad);
 	}
 
 	private String generarCodigoUnicoPedido() {
@@ -338,22 +535,52 @@ public final class RegistrarPedidoCasoUsoImpl implements RegistrarPedidoCasoUso 
 		PedidoEntidad pedidoExistente;
 
 		do {
-			codigoPedido = UtilCodigo.generarCodigo("PED");
-			pedidoExistente = daoFactory.obtenerPedidoDAO().consultarPorId(codigoPedido);
-		} while (UtilObjeto.noEsNulo(pedidoExistente));
+			codigoPedido = UtilCodigo.generarCodigo(
+					PREFIJO_PEDIDO,
+					CANTIDAD_DIGITOS_PEDIDO);
+
+			pedidoExistente = daoFactory.obtenerPedidoDAO()
+					.consultarPorId(codigoPedido);
+
+		} while (UtilObjeto.noEsNulo(pedidoExistente)
+				&& UtilTexto.tieneTexto(pedidoExistente.getCodigoPedido()));
 
 		return codigoPedido;
 	}
 
-	private String generarCodigoUnicoDetallePedido() {
+	private String generarCodigoUnicoDetallePedido(final List<String> codigosGenerados) {
 		String codigoDetallePedido;
+		DetallePedidoEntidad detalleExistente;
 
 		do {
-			codigoDetallePedido = UtilCodigo.generarCodigo("DPE");
-		} while (UtilObjeto.noEsNulo(
-				daoFactory.obtenerDetallePedidoDAO().consultarPorId(codigoDetallePedido)));
+			codigoDetallePedido = UtilCodigo.generarCodigo(
+					PREFIJO_DETALLE_PEDIDO,
+					CANTIDAD_DIGITOS_DETALLE_PEDIDO);
+
+			detalleExistente = daoFactory.obtenerDetallePedidoDAO()
+					.consultarPorId(codigoDetallePedido);
+
+		} while ((UtilObjeto.noEsNulo(detalleExistente)
+				&& UtilTexto.tieneTexto(detalleExistente.getCodigoDetallePedido()))
+				|| codigoYaFueGenerado(codigosGenerados, codigoDetallePedido));
 
 		return codigoDetallePedido;
+	}
+
+	private boolean codigoYaFueGenerado(
+			final List<String> codigosGenerados,
+			final String codigoNuevo) {
+
+		for (String codigoGenerado : codigosGenerados) {
+			if (UtilTexto.sonIgualesIgnorandoMayusculas(
+					codigoGenerado,
+					codigoNuevo)) {
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private boolean fechaIgual(final LocalDate fechaUno, final LocalDate fechaDos) {
