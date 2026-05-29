@@ -47,7 +47,20 @@ public class PedidoControlador {
 	public PedidoDTO obtenerPedidoDummy() {
 		logger.debug("Iniciando obtención del pedido dummy.");
 
-		var pedido = PedidoDTO.builder().build();
+		var pedido = PedidoDTO.builder()
+				.codigoPedido(UtilTexto.TEXTO_VACIO)
+				.fechaRegistro(LocalDate.now())
+				.horaRegistro(LocalTime.now().withNano(0))
+				.tipoAtencion(UtilTexto.TEXTO_VACIO)
+				.estado("Registrado")
+				.totalPedido(BigDecimal.ZERO)
+				.mesa(MesaDTO.builder().build())
+				.cliente(ClienteDTO.builder().build())
+				.empleado(EmpleadoDTO.builder()
+						.fechaNacimiento(LocalDate.now())
+						.build())
+				.detalles(List.of())
+				.build();
 
 		logger.debug("Finalizó la obtención del pedido dummy.");
 

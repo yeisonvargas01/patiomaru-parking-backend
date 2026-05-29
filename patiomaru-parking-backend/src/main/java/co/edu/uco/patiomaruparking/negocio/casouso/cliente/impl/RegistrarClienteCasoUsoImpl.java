@@ -10,7 +10,6 @@ import co.edu.uco.patiomaruparking.entidad.ClienteEntidad;
 import co.edu.uco.patiomaruparking.negocio.assembler.entidad.impl.ClienteEntidadAssembler;
 import co.edu.uco.patiomaruparking.negocio.casouso.cliente.RegistrarClienteCasoUso;
 import co.edu.uco.patiomaruparking.negocio.dominio.ClienteDominio;
-import co.edu.uco.patiomaruparking.transversal.utilitario.UtilCodigo;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilObjeto;
 import co.edu.uco.patiomaruparking.transversal.utilitario.UtilTexto;
 import co.edu.uco.patiomaruparking.transversal.utilitario.excepcion.NegocioPatioMaruExcepcion;
@@ -22,6 +21,7 @@ public final class RegistrarClienteCasoUsoImpl implements RegistrarClienteCasoUs
 
 	private static final String PREFIJO_CLIENTE = "CLI";
 	private static final int CANTIDAD_DIGITOS_CLIENTE = 3;
+	private static final int LIMITE_MAXIMO_CLIENTES = 999;
 
 	private static final boolean ESTADO_CLIENTE_ACTIVO = true;
 
@@ -78,7 +78,7 @@ public final class RegistrarClienteCasoUsoImpl implements RegistrarClienteCasoUs
 	private void validarDatosConsistentes(final ClienteDominio cliente) {
 		validarNombre(cliente.getNombre());
 		validarTelefono(cliente.getTelefono());
-		validarCorreoElectronicoSiFueInformado(cliente.getCorreoElectronico());
+		validarCorreoElectronico(cliente.getCorreoElectronico());
 	}
 
 	private void validarNombre(final String nombre) {
@@ -112,9 +112,10 @@ public final class RegistrarClienteCasoUsoImpl implements RegistrarClienteCasoUs
 		}
 	}
 
-	private void validarCorreoElectronicoSiFueInformado(final String correoElectronico) {
+	private void validarCorreoElectronico(final String correoElectronico) {
 		if (!UtilTexto.tieneTexto(correoElectronico)) {
-			return;
+			throw NegocioPatioMaruExcepcion.crear(
+					"El correo electrónico del cliente es obligatorio.");
 		}
 
 		validarLongitud(
@@ -182,10 +183,6 @@ public final class RegistrarClienteCasoUsoImpl implements RegistrarClienteCasoUs
 	}
 
 	private void validarNoExisteClienteConMismoCorreoElectronico(final String correoElectronico) {
-		if (!UtilTexto.tieneTexto(correoElectronico)) {
-			return;
-		}
-
 		var filtro = ClienteEntidad.builder()
 				.correoElectronico(UtilTexto.aplicarTrim(correoElectronico))
 				.build();
@@ -201,21 +198,56 @@ public final class RegistrarClienteCasoUsoImpl implements RegistrarClienteCasoUs
 	}
 
 	private String generarCodigoUnicoCliente() {
-		String codigoCliente;
-		ClienteEntidad clienteExistente;
+		var clientes = UtilObjeto.obtenerValorDefecto(
+				daoFactory.obtenerClienteDAO().consultar(ClienteEntidad.builder().build()),
+				List.<ClienteEntidad>of());
 
-		do {
-			codigoCliente = UtilCodigo.generarCodigo(
-					PREFIJO_CLIENTE,
-					CANTIDAD_DIGITOS_CLIENTE);
+		var mayorNumeroCliente = 0;
 
-			clienteExistente = daoFactory.obtenerClienteDAO()
-					.consultarPorId(codigoCliente);
+		for (ClienteEntidad cliente : clientes) {
+			var clienteSeguro = UtilObjeto.obtenerValorDefecto(
+					cliente,
+					ClienteEntidad.builder().build());
 
-		} while (UtilObjeto.noEsNulo(clienteExistente)
-				&& UtilTexto.tieneTexto(clienteExistente.getCodigoCliente()));
+			var codigoCliente = UtilTexto.aplicarTrimConvertirMayusculas(
+					clienteSeguro.getCodigoCliente());
 
-		return codigoCliente;
+			if (esCodigoClienteValidoParaCalculo(codigoCliente)) {
+				var numeroCliente = Integer.parseInt(
+						codigoCliente.substring(PREFIJO_CLIENTE.length()));
+
+				if (numeroCliente > mayorNumeroCliente) {
+					mayorNumeroCliente = numeroCliente;
+				}
+			}
+		}
+
+		var nuevoNumeroCliente = mayorNumeroCliente + 1;
+
+		if (nuevoNumeroCliente > LIMITE_MAXIMO_CLIENTES) {
+			throw NegocioPatioMaruExcepcion.crear(
+					"No fue posible generar el código del cliente porque se alcanzó el límite permitido.");
+		}
+
+		return PREFIJO_CLIENTE + String.format("%03d", nuevoNumeroCliente);
+	}
+
+	private boolean esCodigoClienteValidoParaCalculo(final String codigoCliente) {
+		if (!UtilTexto.tieneTexto(codigoCliente)) {
+			return false;
+		}
+
+		if (!codigoCliente.startsWith(PREFIJO_CLIENTE)) {
+			return false;
+		}
+
+		var parteNumerica = codigoCliente.substring(PREFIJO_CLIENTE.length());
+
+		if (parteNumerica.length() != CANTIDAD_DIGITOS_CLIENTE) {
+			return false;
+		}
+
+		return contieneSoloDigitos(parteNumerica);
 	}
 
 	private void guardarCliente(final ClienteDominio cliente) {
